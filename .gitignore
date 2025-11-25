@@ -1,5 +1,45 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-/src/generated/prisma
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+/.nyc_output
+/test-results
+/playwright-report
+
+# production
+/build
+/.next
+/out
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.env*.local
+.env
+.flaskenv
+.vscode/
+
+# local development
+/dev.db
+/.sonarlint
+
+# Drizzle ORM
+/drizzle/migrations
+/drizzle/meta
+
+# Python virtual environment
+/python/venv
+
+# Tesseract.js traineddata (if downloaded locally)
+/public/tessdata

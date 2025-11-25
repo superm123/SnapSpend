@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -55,14 +54,24 @@ jest.mock('lucide-react', () => ({
 // Comprehensive mock for Shadcn UI Select components
 jest.mock('../src/components/ui/select', () => {
   const React = require('react');
-  const SelectPrimitive = require('@radix-ui/react-select');
+  const SelectPrimitive = require('@radix-ui/react-select'); // Retain Radix types
 
-  // Mock Select to manage its own state (open/closed)
+  // We need to simulate the context provided by SelectPrimitive.Root
+  // to allow SelectItem to call onValueChange
+  const MockSelectContext = React.createContext({ onValueChange: (value: string) => {} });
+
   const MockSelect = ({ children, value, onValueChange }: any) => {
+    // Simulate the internal state of Radix Select for open/close
     const [open, setOpen] = React.useState(false);
+
+    // Pass onValueChange through context so SelectItem can access it
+    const contextValue = React.useMemo(() => ({ onValueChange }), [onValueChange]);
+
     return (
       <SelectPrimitive.Root open={open} onOpenChange={setOpen} value={value} onValueChange={onValueChange}>
-        {children}
+        <MockSelectContext.Provider value={contextValue}>
+          {children}
+        </MockSelectContext.Provider>
       </SelectPrimitive.Root>
     );
   };
@@ -74,9 +83,16 @@ jest.mock('../src/components/ui/select', () => {
   ));
   MockSelectTrigger.displayName = 'MockSelectTrigger';
 
-  const MockSelectValue = ({ children, placeholder }: any) => (
-    <SelectPrimitive.Value data-testid="mock-select-value" placeholder={placeholder}>{children}</SelectPrimitive.Value>
-  );
+  const MockSelectValue = ({ children, placeholder }: any) => {
+    // Render the actual value or placeholder.
+    // The real SelectValue renders the actual value if 'value' is provided to SelectRoot
+    // For our mock, let's just render the placeholder or children
+    return (
+      <SelectPrimitive.Value data-testid="mock-select-value" placeholder={placeholder}>
+        {children || placeholder}
+      </SelectPrimitive.Value>
+    );
+  };
 
   const MockSelectContent = React.forwardRef<any, any>(({ children, ...props }, ref) => (
     // Render children directly, simulating that the portal content is in the DOM
@@ -86,35 +102,35 @@ jest.mock('../src/components/ui/select', () => {
   ));
   MockSelectContent.displayName = 'MockSelectContent';
 
-  const MockSelectItem = React.forwardRef<any, any>(({ children, value, onClick, ...props }, ref) => (
-    <div
-      ref={ref}
-      role="option"
-      data-value={value}
-      onClick={(e) => {
-        // Simulate Radix UI SelectItem behavior: close dropdown and call onValueChange
-        // The onValueChange is handled by the parent MockSelectPrimitive.Root
-        // For testing purposes, we can simulate the click and rely on the value being passed
-        if (onClick) onClick(e);
-        // This is a simplified way. In a real scenario, you might want to call
-        // the onValueChange prop of the Select component directly.
-      }}
-      {...props}
-    >
-      {children}
-    </div>
-  ));
+  const MockSelectItem = React.forwardRef<any, any>(({ children, value, onClick, ...props }, ref) => {
+    const { onValueChange } = React.useContext(MockSelectContext); // Get onValueChange from our mock context
+    return (
+      <div
+        ref={ref}
+        role="option"
+        data-value={value}
+        onClick={(e) => {
+          // Simulate Radix UI SelectItem behavior: call onValueChange from context
+          if (onValueChange) onValueChange(value);
+          if (onClick) onClick(e);
+        }}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  });
   MockSelectItem.displayName = 'MockSelectItem';
 
   return {
     Select: MockSelect,
-    SelectGroup: (props: any) => <div {...props} />, // Simple passthrough
+    SelectGroup: (props: any) => <div {...props} />,
     SelectValue: MockSelectValue,
     SelectTrigger: MockSelectTrigger,
     SelectContent: MockSelectContent,
-    SelectLabel: (props: any) => <label {...props} />, // Simple passthrough
+    SelectLabel: (props: any) => <label {...props} />,
     SelectItem: MockSelectItem,
-    SelectSeparator: (props: any) => <div {...props} />, // Simple passthrough
+    SelectSeparator: (props: any) => <div {...props} />,
   };
 });
 
@@ -149,8 +165,57 @@ describe('SettingsPage', () => {
     (useLiveQuery as jest.Mock).mockReturnValue({ id: 1, billingCycleStart: 10 });
     render(<SettingsPage />);
     // The SelectValue inside SelectTrigger should display the value
-    const selectValue = screen.getByTestId('mock-select-value');
-    expect(selectValue).toHaveTextContent('10');
+    const selectValueSpan = screen.getByTestId('mock-select-value');
+    expect(selectValueSpan).toHaveTextContent('10');
   });
 
-  
+  it('updates the billing cycle start day', async () => {
+    let currentBillingCycleStart = 20;
+    (useLiveQuery as jest.Mock).mockReturnValue({ id: 1, billingCycleStart: currentBillingCycleStart });
+    render(<SettingsPage />);
+
+    // Mock the db.settings.update to simulate actual update and re-render
+    (db.settings.update as jest.Mock).mockImplementation((id, changes) => {
+      currentBillingCycleStart = changes.billingCycleStart;
+      // Simulate re-render by updating the mockReturnValue of useLiveQuery
+      (useLiveQuery as jest.Mock).mockReturnValueOnce({ id: 1, billingCycleStart: currentBillingCycleStart });
+      return Promise.resolve();
+    });
+
+    // Open the select dropdown
+    const comboboxTrigger = screen.getByTestId('mock-select-trigger');
+    fireEvent.click(comboboxTrigger);
+
+    // Select a new value
+    const optionToSelect = await screen.findByRole('option', { name: '5' });
+    fireEvent.click(optionToSelect);
+
+    await waitFor(() => {
+      expect(db.settings.update).toHaveBeenCalledWith(1, { billingCycleStart: 5 });
+    });
+  });
+
+  it('does not update billing cycle if value is invalid', async () => {
+    let currentBillingCycleStart = 20;
+    (useLiveQuery as jest.Mock).mockReturnValue({ id: 1, billingCycleStart: currentBillingCycleStart });
+    render(<SettingsPage />);
+
+    // Mock the db.settings.update to simulate actual update and re-render
+    (db.settings.update as jest.Mock).mockImplementation((id, changes) => {
+      // In this test, we expect it NOT to be called, so this implementation shouldn't run.
+      return Promise.resolve();
+    });
+
+    // Open the select dropdown
+    const comboboxTrigger = screen.getByTestId('mock-select-trigger');
+    fireEvent.click(comboboxTrigger);
+
+    // Click the same value again (which should not trigger an update)
+    const optionToSelect = await screen.findByRole('option', { name: '20' });
+    fireEvent.click(optionToSelect);
+
+    await waitFor(() => {
+      expect(db.settings.update).not.toHaveBeenCalled();
+    });
+  });
+});
