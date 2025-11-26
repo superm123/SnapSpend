@@ -1,0 +1,6 @@
+{
+  "appId": "za.snapsend",
+  "appName": "SnapSend",
+  "webDir": "out",
+  "bundledWebRuntime": false
+}

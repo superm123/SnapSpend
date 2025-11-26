@@ -1,5 +1,11 @@
 {
-  "/summary/page": "app/summary/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/categories/page": "app/categories/page.js",
-  "/payments/page": "app/payments/page.js"
+  "/add/page": "app/add/page.js",
+  "/payments/page": "app/payments/page.js",
+  "/page": "app/page.js",
+  "/settings/page": "app/settings/page.js",
+  "/scan/page": "app/scan/page.js",
+  "/settings/users/page": "app/settings/users/page.js",
+  "/summary/page": "app/summary/page.js"
 }

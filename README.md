@@ -1,4 +1,5 @@
-Build a complete, production-ready, 100% offline-first Next.js 14+ (App Router) expense tracker called "SnapSpend".
+Build a complete, production-ready, 100% offline-first Next.js 14+ (App Router) expense tracker called "SnapSend".
+App ID: za.snapsend
 MANDATORY TECH STACK:- Next.js 14+ App Router + TypeScript- Tailwind CSS + MUI + Lucide icons- Recharts (pie + bar)- Tesseract.js (client-side OCR)- Dexie.js (IndexedDB)- Zustand- date-fns + uuid
 EXACT REQUIRED FEATURES (implement ALL):1. Receipt scanner page (/scan)   
 - Drag-drop or file picker   

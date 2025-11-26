@@ -7,13 +7,13 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, IExpense } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
-import Image from 'next/image';
+// import Image from 'next/image';
 import {
   Button,
   TextField,
   Table,
   TableBody,
-  TableCell,next 
+  TableCell,
   TableHead,
   TableRow,
   TableContainer,
@@ -195,7 +195,7 @@ export default function ScanPage() {
           </Box>
           {image && (
             <Box sx={{ mt: 2, position: 'relative', width: '100%', height: 256 }}>
-              <Image src={image} alt="Receipt Preview" layout="fill" objectFit="contain" />
+            <img src={image} alt="Receipt Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               <IconButton
                 sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(255, 255, 255, 0.7)' }}
                 onClick={() => { setImage(null); setBase64Image(null); setOcrResult(''); setLineItems([]); }}

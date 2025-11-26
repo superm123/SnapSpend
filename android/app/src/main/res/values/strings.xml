@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SnapSend</string>
+    <string name="title_activity_main">SnapSend</string>
+    <string name="package_name">za.snapsend</string>
+    <string name="custom_url_scheme">za.snapsend</string>
+</resources>
