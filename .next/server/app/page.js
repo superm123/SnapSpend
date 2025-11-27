@@ -1,5 +1,5 @@
 var R=require("../chunks/ssr/[turbopack]_runtime.js")("server/app/page.js")
-R.c("server/chunks/ssr/OneDrive_Documents_GitHub_budget_planner_ec152b61._.js")
+R.c("server/chunks/ssr/OneDrive_Documents_GitHub_budget_planner_6e40159d._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__b7941b93._.js")
 R.c("server/chunks/ssr/OneDrive_Documents_GitHub_budget_planner_1d7b87aa._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__3b487831._.js")

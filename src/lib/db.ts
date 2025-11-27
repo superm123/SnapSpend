@@ -10,6 +10,7 @@ export interface IExpense {
   userId: number;
   date: Date;
   receiptImage?: string;
+  place?: string; // New field for the place where the expense occurred
 }
 
 export interface ICategory {
@@ -30,6 +31,7 @@ export interface IUser {
 export interface ISetting {
   id?: number;
   billingCycleStart: number;
+  currency: string;
 }
 
 class SnapSpendDatabase extends Dexie {
@@ -41,12 +43,12 @@ class SnapSpendDatabase extends Dexie {
 
   constructor() {
     super('SnapSpendDatabase');
-    this.version(1).stores({
-      expenses: '++id, categoryId, paymentMethodId, userId, date',
+    this.version(2).stores({
+      expenses: '++id, categoryId, paymentMethodId, userId, date, place', // Added 'place'
       categories: '++id, name',
       paymentMethods: '++id, name',
       users: '++id, name',
-      settings: '++id',
+      settings: '++id, currency', // Added 'currency'
     });
     this.on('populate', () => this.populate());
   }

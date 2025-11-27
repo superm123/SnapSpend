@@ -50,9 +50,11 @@ export default function ScanPage() {
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [loadingOcr, setLoadingOcr] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
+  const [placeName, setPlaceName] = useState(''); // New state for place name
 
   const categories = useLiveQuery(() => db.categories.toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
+  const allExpenses = useLiveQuery(() => db.expenses.toArray()); // Get all expenses for category suggestion
 
   // Tesseract Worker
   const [worker, setWorker] = useState<Tesseract.Worker | null>(null);
@@ -155,6 +157,7 @@ export default function ScanPage() {
       date: new Date(),
       userId: currentUser.id!,
       receiptImage: base64Image || undefined,
+      place: placeName || undefined, // Add place name to the expense
     }));
 
     try {
@@ -164,6 +167,7 @@ export default function ScanPage() {
       setBase64Image(null);
       setOcrResult('');
       setLineItems([]);
+      setPlaceName(''); // Clear place name after saving
       router.push('/summary');
     } catch (error) {
       console.error('Failed to save expenses:', error);
@@ -179,6 +183,16 @@ export default function ScanPage() {
         </Typography>
 
         <Paper sx={{ p: 2, mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Place Name
+          </Typography>
+          <TextField
+            fullWidth
+            label="Where did you make this purchase?"
+            value={placeName}
+            onChange={(e) => setPlaceName(e.target.value)}
+            sx={{ mb: 2 }}
+          />
           <Typography variant="h6" gutterBottom>
             Upload Receipt Image
           </Typography>

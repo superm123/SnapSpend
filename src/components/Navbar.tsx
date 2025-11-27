@@ -72,7 +72,7 @@ export default function Navbar() {
                 },
               }}
             >
-              <link.icon style={{ marginRight: '8px', width: 20, height: 20 }} />
+              <link.icon style={{ marginRight: '8px', width: 20, height: 20, color: muiTheme.palette.text.primary }} />
               <ListItemText primary={link.label} />
             </ListItemButton>
           </ListItem>
@@ -86,11 +86,10 @@ export default function Navbar() {
       <Toolbar>
         {isMobile && (
           <IconButton
-            color="inherit"
+            sx={{ mr: 2, color: muiTheme.palette.text.primary }} // Explicitly set color
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2 }}
           >
             <MenuIcon />
           </IconButton>
@@ -98,8 +97,6 @@ export default function Navbar() {
 
         <Typography
           variant="h6"
-          component={Link}
-          href="/"
           sx={{
             flexGrow: 1,
             textDecoration: 'none',
@@ -125,21 +122,19 @@ export default function Navbar() {
                   },
                 }}
               >
-                <link.icon style={{ marginRight: '4px', width: 18, height: 18 }} />
+                <link.icon style={{ marginRight: '4px', width: 18, height: 18, color: muiTheme.palette.text.primary }} />
                 {link.label}
               </Button>
             ))}
           </Stack>
         )}
 
-        <IconButton
-          color="inherit"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          sx={{ ml: 2 }}
-        >
-          {theme === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-        </IconButton>
-
+                  <IconButton
+                    sx={{ ml: 2, color: muiTheme.palette.text.primary }} // Explicitly set color
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  >
+                    {theme === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+                  </IconButton>
         <Drawer
           anchor="left"
           open={mobileOpen}

@@ -19,7 +19,16 @@ export const useStore = create<AppState>((set) => ({
   billingCycleStart: 20, // default value
   setBillingCycleStart: (day) => set({ billingCycleStart: day }),
   currency: 'USD', // default value
-  setCurrency: (currency) => set({ currency }),
+  setCurrency: async (currency) => {
+    set({ currency });
+    // Persist currency to settings
+    const settings = await db.settings.get(1);
+    if (settings) {
+      await db.settings.update(1, { currency });
+    } else {
+      await db.settings.add({ id: 1, billingCycleStart: 20, currency }); // Create with default billingCycleStart
+    }
+  },
   init: async () => {
     // Try to get the first user, or create one if none exist
     let user = await db.users.toCollection().first();
@@ -29,15 +38,13 @@ export const useStore = create<AppState>((set) => ({
     }
     set({ currentUser: user });
 
-    // Get billing cycle start day from settings
-    const settings = await db.settings.toCollection().first();
-    if (settings) {
-      set({ billingCycleStart: settings.billingCycleStart });
+    // Get settings (billing cycle and currency)
+    let settings = await db.settings.get(1); // Assuming single settings entry with ID 1
+    if (!settings) {
+      // If no settings exist, create default
+      settings = { id: 1, billingCycleStart: 20, currency: getCurrencyFromLocale(navigator.language) };
+      await db.settings.add(settings);
     }
-
-    // Get currency from locale
-    const locale = navigator.language;
-    const currency = getCurrencyFromLocale(locale);
-    set({ currency });
+    set({ billingCycleStart: settings.billingCycleStart, currency: settings.currency });
   },
 }));
