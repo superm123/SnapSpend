@@ -111,7 +111,7 @@ export default function ScanPage() {
     }
   };
 
-  const extractLineItems = (text: string) => {
+  const extractLineItems = async (text: string) => { // Make async to await db queries
     const lines = text.split('\n').filter(line => line.trim() !== '');
     const extracted: LineItem[] = [];
     let itemId = 0;
@@ -121,17 +121,32 @@ export default function ScanPage() {
     const itemRegex = new RegExp(`(.*?)\\s+([${currencySymbols}]?\\s?\\d+\\.\\d{2})$`, 'i');
     const totalRegex = /Total|Balance Due|Amount Due/i;
 
-    lines.forEach((line) => {
-      if (totalRegex.test(line)) return;
+    for (const line of lines) { // Use for...of for async/await
+      if (totalRegex.test(line)) continue;
       const match = line.match(itemRegex);
       if (match) {
+        const description = match[1].trim();
+        const amount = parseFloat(match[2].replace(/[^0-9.]/g, ''));
+        let suggestedCategoryId: number | undefined;
+
+        // Category suggestion logic
+        if (allExpenses) {
+          const matchingExpense = allExpenses.find(
+            (exp) => exp.description.toLowerCase() === description.toLowerCase()
+          );
+          if (matchingExpense) {
+            suggestedCategoryId = matchingExpense.categoryId;
+          }
+        }
+
         extracted.push({
           id: itemId++,
-          description: match[1].trim(),
-          amount: parseFloat(match[2].replace(/[^0-9.]/g, '')),
+          description,
+          amount,
+          categoryId: suggestedCategoryId, // Assign suggested category
         });
       }
-    });
+    }
     setLineItems(extracted);
   };
 

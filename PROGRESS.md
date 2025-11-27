@@ -64,3 +64,27 @@ You can now open the native projects in Android Studio and Xcode to build and ru
 
 *   To open the Android project, open Android Studio and select the `android` directory in this project.
 *   To open the iOS project, open Xcode and select the `ios` directory in this project.
+
+---
+
+## Recent Progress Updates:
+
+### Currency Localization and Persistence:
+*   **Currency Detection:** Implemented automatic detection of default currency based on user's locale (`navigator.language`).
+*   **Currency Mapping:** Extended `src/lib/utils/currency.ts` with mappings for various currencies and their symbols, including South African Rand (ZAR).
+*   **Persistent Selection:** Integrated currency selection into `src/app/settings/page.tsx` allowing users to choose their preferred currency. The chosen currency is now persistently stored in `IndexedDB` via `db.settings` and loaded on app startup.
+
+### App Icon Integration:
+*   Successfully integrated app icons for Android, iOS, and PWA platforms using `@capacitor/assets`.
+*   Users can provide their `icon.png` in the `resources` folder and run `npx capacitor-assets generate` to update the app icons.
+
+### New Core Features Implemented (from README.md):
+1.  **"group lite items in bills record name of place as well"**:
+    *   Added an optional `place` field to the `IExpense` interface in `src/lib/db.ts` and updated the Dexie.js database schema to version 2.
+    *   Modified `src/app/scan/page.tsx` to include a "Place Name" input field, ensuring the entered place name is saved with each expense.
+2.  **"figure out the category based on previous use"**:
+    *   In `src/app/scan/page.tsx`, the `extractLineItems` function now suggests a category for extracted line items by matching their descriptions against previously recorded expenses.
+
+### Navbar Status (Known Issue):
+*   The Navbar is now rendering its full functionality (navigation links, dark/light mode toggle).
+*   **Known Bug:** Icons within the Navbar are still rendering as white in light mode, making them invisible. This issue is temporarily de-prioritized as per user instruction.
