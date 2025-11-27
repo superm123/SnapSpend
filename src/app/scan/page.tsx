@@ -2,12 +2,13 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { currencySymbolMap } from '@/lib/utils/currency';
 import { createWorker } from 'tesseract.js';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, IExpense } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
-// import Image from 'next/image';
+import Image from 'next/image';
 import {
   Button,
   TextField,
@@ -112,7 +113,10 @@ export default function ScanPage() {
     const lines = text.split('\n').filter(line => line.trim() !== '');
     const extracted: LineItem[] = [];
     let itemId = 0;
-    const itemRegex = /(.*?)\s+([$€£]?\s?\d+\.\d{2})$/i;
+
+    // Create a regex that matches any of the currency symbols
+    const currencySymbols = Object.values(currencySymbolMap).join('');
+    const itemRegex = new RegExp(`(.*?)\\s+([${currencySymbols}]?\\s?\\d+\\.\\d{2})$`, 'i');
     const totalRegex = /Total|Balance Due|Amount Due/i;
 
     lines.forEach((line) => {
@@ -195,7 +199,7 @@ export default function ScanPage() {
           </Box>
           {image && (
             <Box sx={{ mt: 2, position: 'relative', width: '100%', height: 256 }}>
-            <img src={image} alt="Receipt Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <Image src={image} alt="Receipt Preview" layout="fill" objectFit="contain" />
               <IconButton
                 sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(255, 255, 255, 0.7)' }}
                 onClick={() => { setImage(null); setBase64Image(null); setOcrResult(''); setLineItems([]); }}

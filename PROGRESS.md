@@ -56,10 +56,11 @@ The project successfully compiles and is ready for use, meeting all specificatio
 
 ### Current State of Mobile Wrappers:
 *   The Android and iOS projects are set up and synchronized.
-*   Currently, the native mobile apps will only display the content of the placeholder `out/index.html`.
-*   To display the actual Next.js application content, one of the following approaches is required:
-    *   **Option 1: Debug Next.js Static Export:** Identify and resolve the underlying issues preventing Next.js from generating a complete static export to the `out` directory. This is recommended for an offline-first mobile experience.
-    *   **Option 2: Use Next.js Development Server:** Configure Capacitor to load the Next.js application from a running development server. This is easier to set up but makes the mobile app server-dependent.
+*   The `out` directory is now being generated correctly by the Next.js build process.
+*   The native mobile apps will now display the actual Next.js application content.
 
 ### Next Steps for User:
-Please choose between **Option 1 (Debug Next.js Static Export)** and **Option 2 (Use Next.js Development Server)** to proceed with integrating the actual Next.js application into the mobile wrappers. Instructions for opening and running the native projects in Android Studio and Xcode are also available.
+You can now open the native projects in Android Studio and Xcode to build and run the application on your devices or simulators.
+
+*   To open the Android project, open Android Studio and select the `android` directory in this project.
+*   To open the iOS project, open Xcode and select the `ios` directory in this project.

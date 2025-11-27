@@ -8,10 +8,13 @@ import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { useStore } from '@/lib/store';
+import { getCurrencySymbol, currencySymbolMap } from '@/lib/utils/currency';
 
 export default function SettingsPage() {
   const settings = useLiveQuery(() => db.settings.get(1)); // Assuming a single settings entry with ID 1
   const [billingCycleStart, setBillingCycleStart] = useState<string>('20');
+  const { currency, setCurrency } = useStore();
 
   useEffect(() => {
     if (settings) {
@@ -25,6 +28,10 @@ export default function SettingsPage() {
       await db.settings.update(1, { billingCycleStart: day });
       setBillingCycleStart(value);
     }
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    setCurrency(value);
   };
 
   return (
@@ -51,6 +58,26 @@ export default function SettingsPage() {
             <SelectContent>
               {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                 <SelectItem key={day} value={day.toString()}>{day}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Currency Settings</h2>
+        <p className="mb-2">Select your preferred currency.</p>
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="currency">Current Currency:</Label>
+          <Select value={currency} onValueChange={handleCurrencyChange}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(currencySymbolMap).map((currencyCode) => (
+                <SelectItem key={currencyCode} value={currencyCode}>
+                  {currencyCode} ({getCurrencySymbol(currencyCode)})
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>

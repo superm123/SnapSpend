@@ -5,6 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { getBillingCycleDates } from '@/lib/utils/customMonth';
 import { useStore } from '@/lib/store';
+import { getCurrencySymbol } from '@/lib/utils/currency';
 import {
   PieChart,
   Pie,
@@ -42,7 +43,7 @@ const COLORS = [
 ];
 
 export default function SummaryPage() {
-  const { currentUser } = useStore();
+  const { currentUser, currency } = useStore();
   const settings = useLiveQuery(() => db.settings.toArray());
 
   const [billingCycleDates, setBillingCycleDates] = useState<{
@@ -75,6 +76,7 @@ export default function SummaryPage() {
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
 
   const totalExpenses = expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
+  const currencySymbol = getCurrencySymbol(currency);
 
   const categoryData = categories
     ?.map((cat) => ({
@@ -112,7 +114,7 @@ export default function SummaryPage() {
         />
         <CardContent>
           <Typography variant="h4" component="p" sx={{ fontWeight: 'bold' }}>
-            Total: ${totalExpenses.toFixed(2)}
+            Total: {currencySymbol}{totalExpenses.toFixed(2)}
           </Typography>
         </CardContent>
       </Card>
@@ -138,7 +140,7 @@ export default function SummaryPage() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                      <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -156,8 +158,8 @@ export default function SummaryPage() {
                     <BarChart data={paymentMethodData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
-                      <YAxis tickFormatter={(value) => `$${value}`} />
-                      <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                      <YAxis tickFormatter={(value) => `${currencySymbol}${value}`} />
+                      <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} />
                       <Legend />
                       <Bar dataKey="value">
                         {paymentMethodData.map((entry, index) => (
