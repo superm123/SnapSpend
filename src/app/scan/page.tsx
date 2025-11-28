@@ -9,6 +9,7 @@ import { db, IExpense } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import Image from 'next/image';
+import { Camera, CameraResultType } from '@capacitor/camera';
 import {
   Button,
   TextField,
@@ -30,7 +31,7 @@ import {
   LinearProgress,
   SelectChangeEvent,
 } from '@mui/material';
-import { Upload, XCircle, Loader2 } from 'lucide-react';
+import { Upload, XCircle, Loader2, Camera as CameraIcon, Trash2 } from 'lucide-react';
 
 interface LineItem {
   id: number;
@@ -92,6 +93,25 @@ export default function ScanPage() {
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] } });
+
+  const handleCameraScan = async () => {
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.DataUrl,
+      });
+      if (photo.dataUrl) {
+        setImage(photo.dataUrl);
+        setBase64Image(photo.dataUrl);
+        setOcrResult('');
+        setLineItems([]);
+      }
+    } catch (error) {
+      console.error('Camera failed:', error);
+      alert('Failed to open camera.');
+    }
+  };
 
   const performOcr = async () => {
     if (!worker || !image) return;
@@ -158,6 +178,10 @@ export default function ScanPage() {
     );
   };
 
+  const handleRemoveLineItem = (id: number) => {
+    setLineItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  };
+
   const saveExpenses = async () => {
     if (lineItems.length === 0 || !currentUser?.id) {
         alert(!currentUser?.id ? 'Please select a user in settings.' : 'No line items to save.');
@@ -209,22 +233,37 @@ export default function ScanPage() {
             sx={{ mb: 2 }}
           />
           <Typography variant="h6" gutterBottom>
-            Upload Receipt Image
+            Upload or Scan Receipt
           </Typography>
-          <Box
-            {...getRootProps()}
-            sx={{
-              border: '2px dashed grey',
-              borderRadius: 1,
-              p: 4,
-              textAlign: 'center',
-              cursor: 'pointer',
-              bgcolor: isDragActive ? 'action.hover' : 'transparent',
-            }}
-          >
-            <input {...getInputProps()} />
-            <Typography>Drag 'n' drop a receipt image here, or click to select files</Typography>
-            <Upload style={{ margin: '16px auto 0', color: 'grey' }} />
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Button
+                variant="outlined"
+                onClick={handleCameraScan}
+                startIcon={<CameraIcon />}
+                sx={{ flex: 1 }}
+            >
+                Scan with Camera
+            </Button>
+            <Box
+                {...getRootProps()}
+                sx={{
+                border: '2px dashed grey',
+                borderRadius: 1,
+                p: 2,
+                textAlign: 'center',
+                cursor: 'pointer',
+                bgcolor: isDragActive ? 'action.hover' : 'transparent',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+                }}
+            >
+                <input {...getInputProps()} />
+                <Typography variant="body2">Drop image or click to upload</Typography>
+                <Upload size={24} style={{ marginTop: '8px', color: 'grey' }} />
+            </Box>
           </Box>
           {image && (
             <Box sx={{ mt: 2, position: 'relative', width: '100%', height: 256 }}>
@@ -261,6 +300,7 @@ export default function ScanPage() {
                     <TableCell>Amount</TableCell>
                     <TableCell>Category</TableCell>
                     <TableCell>Payment Method</TableCell>
+                    <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -291,6 +331,11 @@ export default function ScanPage() {
                             {paymentMethods?.map((pm) => <MenuItem key={pm.id} value={pm.id!.toString()}>{pm.name}</MenuItem>)}
                           </Select>
                         </FormControl>
+                      </TableCell>
+                      <TableCell>
+                        <IconButton onClick={() => handleRemoveLineItem(item.id)} aria-label="delete">
+                          <Trash2 />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))}

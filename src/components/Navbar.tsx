@@ -86,7 +86,7 @@ export default function Navbar() {
       <Toolbar>
         {isMobile && (
           <IconButton
-            sx={{ mr: 2, color: muiTheme.palette.text.primary }} // Explicitly set color
+            sx={{ mr: 2 }} // Explicitly set color
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
@@ -100,7 +100,7 @@ export default function Navbar() {
           sx={{
             flexGrow: 1,
             textDecoration: 'none',
-            color: 'inherit',
+          
             fontWeight: 'bold',
           }}
         >
