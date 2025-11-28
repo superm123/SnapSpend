@@ -52,6 +52,7 @@ export default function ScanPage() {
   const [loadingOcr, setLoadingOcr] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [placeName, setPlaceName] = useState(''); // New state for place name
+  const [showRawOcr, setShowRawOcr] = useState(false); // State to toggle raw OCR visibility
 
   const categories = useLiveQuery(() => db.categories.toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
@@ -298,9 +299,15 @@ export default function ScanPage() {
             {loadingOcr ? `Processing... ${Math.round(ocrProgress * 100)}%` : 'Scan Receipt'}
           </Button>
           {loadingOcr && <LinearProgress variant="determinate" value={ocrProgress * 100} sx={{ mt: 1 }} />}
+
+          {ocrResult && (
+            <Button onClick={() => setShowRawOcr(!showRawOcr)} fullWidth variant="outlined" sx={{ mt: 2 }}>
+              {showRawOcr ? 'Hide Raw OCR Result' : 'Show Raw OCR Result'}
+            </Button>
+          )}
         </Paper>
 
-        {ocrResult && (
+        {ocrResult && showRawOcr && (
           <Paper sx={{ p: 2, mb: 4 }}>
             <Typography variant="h6" gutterBottom>OCR Result (Raw Text)</Typography>
             <TextField value={ocrResult} InputProps={{ readOnly: true }} multiline rows={10} fullWidth variant="outlined" />
