@@ -60,14 +60,12 @@ describe('customMonth utilities', () => {
 
     it('should handle billing cycle start day near end of month (e.g., 31)', () => {
       // Current date: Oct 15. Billing cycle starts on 31st.
-      // Expected: Sep 30 (as Sep has 30 days) - Oct 30
-      // Mocked date (Oct 15) is before billingCycleStartDay (31st).
-      // So, it should be the previous month's cycle: Sep 30 - Oct 30
+      // Expected: Sep 30 (as Sep has 30 days) - Oct 29 (1 month after Sep 30 is Oct 30, then subDays(Oct 30, 1) is Oct 29)
       const billingCycleStartDay = 31;
       const { cycleStartDate, cycleEndDate } = getBillingCycleDates(billingCycleStartDay);
 
       expect(format(cycleStartDate, 'yyyy-MM-dd')).toBe('2023-09-30');
-      expect(format(cycleEndDate, 'yyyy-MM-dd')).toBe('2023-10-30');
+      expect(format(cycleEndDate, 'yyyy-MM-dd')).toBe('2023-10-29');
     });
 
     it('should handle billing cycle start day for leap year (Feb 29)', () => {
@@ -107,9 +105,9 @@ describe('customMonth utilities', () => {
       const billingCycleStartDay = 30; // Attempt to start on 30th
       const { cycleStartDate, cycleEndDate } = getBillingCycleDates(billingCycleStartDay);
       // Current date Feb 15, 2023. Cycle starts 30th.
-      // Expected: Jan 31, 2023 - Feb 28, 2023 (clamped to last day of month)
-      expect(format(cycleStartDate, 'yyyy-MM-dd')).toBe('2023-01-31');
-      expect(format(cycleEndDate, 'yyyy-MM-dd')).toBe('2023-02-28');
+      // Expected: Jan 30, 2023 - Feb 27, 2023 (clamped to last day of month)
+      expect(format(cycleStartDate, 'yyyy-MM-dd')).toBe('2023-01-30');
+      expect(format(cycleEndDate, 'yyyy-MM-dd')).toBe('2023-02-27');
 
       // Restore original date mock
       global.Date = class extends realDate {

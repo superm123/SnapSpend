@@ -2,6 +2,13 @@ import { test, expect } from '@playwright/test';
 import * as path from 'path';
 
 test.describe('E2E Receipt Scan, Edit, Save, and Summary Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      globalThis.TransformStream = globalThis.TransformStream || class TransformStream {};
+    });
+    await page.goto('http://localhost:3000/'); // Navigate to the root of the app
+  });
+
   test('should successfully scan, edit, save expenses, and verify in summary', async ({ page }) => {
     // 1. Mock Tesseract.js worker
     // We'll expose a mock createWorker function that returns a worker with a predictable recognize method.

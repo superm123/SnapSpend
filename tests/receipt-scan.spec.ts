@@ -1,11 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { db } from '../src/lib/db'; // Adjust path as necessary
 
 test.describe('Receipt Scan E2E Flow', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      globalThis.TransformStream = globalThis.TransformStream || class TransformStream {};
+    });
     // Clear IndexedDB before each test
     await page.goto('/'); // Navigate to a page to ensure Dexie is initialized in the browser context
     await page.evaluate(async () => {
+      const { db } = await import('../src/lib/db'); // Import db within the browser context
       await db.delete();
       await db.open(); // Re-open after delete
       // Seed categories

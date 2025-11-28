@@ -53,6 +53,7 @@ export default function ScanPage() {
   const [ocrProgress, setOcrProgress] = useState(0);
   const [placeName, setPlaceName] = useState(''); // New state for place name
   const [showRawOcr, setShowRawOcr] = useState(false); // State to toggle raw OCR visibility
+  const [newItem, setNewItem] = useState<{ description: string; amount: string }>({ description: '', amount: '' }); // New state for adding manual items
 
   const categories = useLiveQuery(() => db.categories.toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
@@ -199,6 +200,24 @@ export default function ScanPage() {
 
   const handleRemoveLineItem = (id: number) => {
     setLineItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  };
+
+  const handleAddNewItem = () => {
+    const amountNum = parseFloat(newItem.amount);
+    if (!newItem.description || isNaN(amountNum) || amountNum <= 0) {
+      alert('Please enter a valid description and amount for the new item.');
+      return;
+    }
+
+    setLineItems((prevItems) => [
+      ...prevItems,
+      {
+        id: Math.max(0, ...prevItems.map(item => item.id)) + 1, // Generate a new unique ID
+        description: newItem.description,
+        amount: amountNum,
+      },
+    ]);
+    setNewItem({ description: '', amount: '' }); // Clear input fields
   };
 
   const saveExpenses = async () => {
@@ -367,6 +386,28 @@ export default function ScanPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            <Box sx={{ mt: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+              <TextField
+                label="New Item Description"
+                variant="outlined"
+                value={newItem.description}
+                onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                sx={{ flexGrow: 1 }}
+              />
+              <TextField
+                label="Amount"
+                variant="outlined"
+                type="number"
+                value={newItem.amount}
+                onChange={(e) => setNewItem({ ...newItem, amount: e.target.value })}
+                sx={{ width: 120 }}
+              />
+              <Button onClick={handleAddNewItem} variant="contained" sx={{ height: 56 }}>
+                Add Item
+              </Button>
+            </Box>
+
             <Button onClick={saveExpenses} fullWidth variant="contained" sx={{ mt: 2 }}>
               Save Expenses
             </Button>

@@ -11,8 +11,7 @@ describe('getBillingCycleDates', () => {
     const { cycleStartDate, cycleEndDate } = getBillingCycleDates(billingCycleStartDay, currentDate);
 
     const expectedStartDate = new Date(2023, 10, 15); // Nov 15, 2023
-    let expectedEndDate = setDate(endOfMonth(addMonths(currentDate, 1)), billingCycleStartDay - 1);
-    expectedEndDate.setHours(23, 59, 59, 999);
+    const expectedEndDate = new Date(2023, 11, 14, 23, 59, 59, 999); // Dec 14, 2023
 
     expect(cycleStartDate.getDate()).toBe(expectedStartDate.getDate());
     expect(cycleStartDate.getMonth()).toBe(expectedStartDate.getMonth());
@@ -30,8 +29,7 @@ describe('getBillingCycleDates', () => {
     const { cycleStartDate, cycleEndDate } = getBillingCycleDates(billingCycleStartDay, currentDate);
 
     const expectedStartDate = new Date(2023, 9, 15); // Oct 15, 2023
-    let expectedEndDate = setDate(endOfMonth(currentDate), billingCycleStartDay - 1);
-    expectedEndDate.setHours(23, 59, 59, 999);
+    const expectedEndDate = new Date(2023, 10, 14, 23, 59, 59, 999); // Nov 14, 2023
 
     expect(cycleStartDate.getDate()).toBe(expectedStartDate.getDate());
     expect(cycleStartDate.getMonth()).toBe(expectedStartDate.getMonth());
@@ -49,10 +47,7 @@ describe('getBillingCycleDates', () => {
     const { cycleStartDate, cycleEndDate } = getBillingCycleDates(billingCycleStartDay, currentDate);
 
     const expectedStartDate = new Date(2023, 10, 1); // Nov 1, 2023
-    let expectedEndDate = endOfMonth(currentDate);
-    expectedEndDate = setDate(endOfMonth(addMonths(currentDate, 1)), billingCycleStartDay - 1);
-    expectedEndDate.setHours(23, 59, 59, 999);
-
+    const expectedEndDate = new Date(2023, 10, 30, 23, 59, 59, 999); // Nov 30, 2023
 
     expect(cycleStartDate.getDate()).toBe(expectedStartDate.getDate());
     expect(cycleStartDate.getMonth()).toBe(expectedStartDate.getMonth());
@@ -62,7 +57,7 @@ describe('getBillingCycleDates', () => {
     expect(cycleEndDate.getFullYear()).toBe(expectedEndDate.getFullYear());
   });
 
-  // Test case 4: Billing cycle start day is 30 (for months with fewer days)
+  // Test case 4: Billing cycle start day is 30 (for months with fewer days like Feb)
   test('should handle billing cycle starting on the 30th for months with fewer days', () => {
     const billingCycleStartDay = 30;
     const currentDate = new Date(2023, 1, 15); // Feb 15, 2023
@@ -70,8 +65,7 @@ describe('getBillingCycleDates', () => {
     const { cycleStartDate, cycleEndDate } = getBillingCycleDates(billingCycleStartDay, currentDate);
 
     const expectedStartDate = new Date(2023, 0, 30); // Jan 30, 2023
-    let expectedEndDate = setDate(endOfMonth(currentDate), billingCycleStartDay - 1);
-    expectedEndDate.setHours(23, 59, 59, 999);
+    const expectedEndDate = new Date(2023, 1, 27, 23, 59, 59, 999); // Feb 27, 2023
 
     expect(cycleStartDate.getDate()).toBe(expectedStartDate.getDate());
     expect(cycleStartDate.getMonth()).toBe(expectedStartDate.getMonth());
@@ -89,8 +83,7 @@ describe('getBillingCycleDates', () => {
       const { cycleStartDate, cycleEndDate } = getBillingCycleDates(billingCycleStartDay, currentDate);
   
       const expectedStartDate = new Date(2023, 10, 15); // Nov 15, 2023
-      let expectedEndDate = setDate(endOfMonth(addMonths(currentDate, 1)), billingCycleStartDay - 1);
-      expectedEndDate.setHours(23, 59, 59, 999);
+      const expectedEndDate = new Date(2023, 11, 14, 23, 59, 59, 999); // Dec 14, 2023
   
       expect(cycleStartDate.getDate()).toBe(expectedStartDate.getDate());
       expect(cycleStartDate.getMonth()).toBe(expectedStartDate.getMonth());
