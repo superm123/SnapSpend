@@ -33,6 +33,7 @@ const navLinks = [
   { href: '/payments', label: 'Payment Methods', icon: CreditCard },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/summary', label: 'Summary', icon: BarChart },
+  { href: '/history', label: 'History', icon: ListIcon },
 ];
 
 export default function Navbar() {
