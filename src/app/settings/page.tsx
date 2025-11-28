@@ -52,7 +52,7 @@ export default function SettingsPage() {
         <div className="flex items-center space-x-2">
           <Label htmlFor="billingCycleStart">Cycle starts on day:</Label>
           <Select value={billingCycleStart} onValueChange={handleBillingCycleChange}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger id="billingCycleStart" className="w-[100px]">
               <SelectValue placeholder="Day" />
             </SelectTrigger>
             <SelectContent>

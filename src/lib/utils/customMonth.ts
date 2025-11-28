@@ -1,25 +1,29 @@
-import { addMonths, setDate, isBefore, getDaysInMonth } from 'date-fns';
+import { addMonths, subDays, setDate, lastDayOfMonth } from 'date-fns';
 
 export function getBillingCycleDates(billingCycleStartDay: number, date: Date = new Date()) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
   let cycleStartDate: Date;
   let cycleEndDate: Date;
 
-  // Adjust billingCycleStartDay to be within the valid range of days for the current month
-  // This helps when the start day is high (e.g., 30) and the month has fewer days (e.g., Feb)
-  const actualBillingCycleStartDay = Math.min(billingCycleStartDay, getDaysInMonth(date));
+  const getValidDay = (monthDate: Date, day: number) => {
+    return Math.min(day, lastDayOfMonth(monthDate).getDate());
+  };
 
-  const currentMonthStartDay = setDate(date, actualBillingCycleStartDay);
-
-  if (isBefore(date, currentMonthStartDay)) {
-    // Current date is before the billing cycle start day of the current month
-    // Cycle started in the previous month and ends in the current month
-    cycleStartDate = setDate(addMonths(date, -1), billingCycleStartDay);
-    cycleEndDate = setDate(date, billingCycleStartDay - 1);
+  if (date.getDate() < billingCycleStartDay) {
+    // Cycle started in the previous month
+    const prevMonthDate = addMonths(date, -1);
+    const startDay = getValidDay(prevMonthDate, billingCycleStartDay);
+    cycleStartDate = new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth(), startDay);
+    const endDay = getValidDay(date, billingCycleStartDay - 1);
+    cycleEndDate = new Date(year, month, endDay);
   } else {
-    // Current date is on or after the billing cycle start day of the current month
-    // Cycle started in the current month and ends in the next month
-    cycleStartDate = setDate(date, billingCycleStartDay);
-    cycleEndDate = setDate(addMonths(date, 1), billingCycleStartDay - 1);
+    // Cycle started in the current month
+    const startDay = getValidDay(date, billingCycleStartDay);
+    cycleStartDate = new Date(year, month, startDay);
+    const nextMonthDate = addMonths(date, 1);
+    const endDay = getValidDay(nextMonthDate, billingCycleStartDay - 1);
+    cycleEndDate = new Date(nextMonthDate.getFullYear(), nextMonthDate.getMonth(), endDay);
   }
 
   // Normalize dates to avoid issues with timezones and DST

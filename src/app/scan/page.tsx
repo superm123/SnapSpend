@@ -167,6 +167,24 @@ export default function ScanPage() {
         });
       }
     }
+
+    // Fallback for slips with no line items but a total
+    if (extracted.length === 0) {
+      const slipTotalRegex = new RegExp(`(?:Total|Amount Due|Balance):?\\s*([${currencySymbols}]?\\s?\\d+\\.\\d{2})`, 'i');
+      for (const line of lines) {
+        const match = line.match(slipTotalRegex);
+        if (match) {
+          const amount = parseFloat(match[1].replace(/[^0-9.]/g, ''));
+          extracted.push({
+            id: itemId++,
+            description: 'Total',
+            amount,
+          });
+          break; // Stop after finding the first total
+        }
+      }
+    }
+
     setLineItems(extracted);
   };
 

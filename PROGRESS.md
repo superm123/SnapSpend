@@ -88,3 +88,28 @@ You can now open the native projects in Android Studio and Xcode to build and ru
 ### Navbar Status (Known Issue):
 *   The Navbar is now rendering its full functionality (navigation links, dark/light mode toggle).
 *   **Known Bug:** Icons within the Navbar are still rendering as white in light mode, making them invisible. This issue is temporarily de-prioritized as per user instruction.
+---
+
+## Feature Enhancements and E2E Testing:
+
+### New Features:
+1.  **Direct Camera Access:**
+    *   Integrated `@capacitor/camera` to allow users to scan receipts directly using their device's camera.
+    *   Added a "Scan with Camera" button to the `src/app/scan/page.tsx` page.
+2.  **Improved Line Item Management:**
+    *   Added a "Remove" button to each line item in the editable table on the scan page, allowing users to easily remove incorrectly extracted items.
+3.  **Expense History and Filtering:**
+    *   Created a new "History" page at `src/app/history/page.tsx`.
+    *   Users can now filter their expenses by a selected date range.
+4.  **CSV Export:**
+    *   Added an "Export to CSV" button on the History page, allowing users to download their filtered expense data.
+5.  **Improved OCR for Slips:**
+    *   Enhanced the `extractLineItems` function to recognize and extract the total amount from receipts that do not have itemized lines (e.g., credit card slips).
+
+### E2E Testing with Playwright:
+*   **New Features Test Suite (`tests/e2e-new-features.spec.ts`):**
+    *   Created a new E2E test suite to cover the new functionality.
+    *   Tests include verifying the presence of the "Scan with Camera" button, the ability to remove line items, date filtering on the History page, and the CSV export functionality.
+*   **Receipt Format Test Suite (`tests/e2e-receipt-formats.spec.ts`):**
+    *   Created a new E2E test suite to test the OCR extraction logic with different receipt formats.
+    *   Includes a test for standard receipts and a test for "slips" that only contain a total amount.

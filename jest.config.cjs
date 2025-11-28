@@ -12,6 +12,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  modulePathIgnorePatterns: ['<rootDir>/node_modules/web-streams-polyfill'],
 
   // Add moduleDirectories to tell Jest where to look for modules.
   // This is crucial for resolving imports like `import { Button from '@/components/ui/button';`
