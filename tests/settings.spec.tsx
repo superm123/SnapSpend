@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SettingsPage from '../src/app/settings/page';
 import { db } from '../src/lib/db';
@@ -64,8 +64,8 @@ jest.mock('../src/components/ui/select', () => {
     // Simulate the internal state of Radix Select for open/close
     const [open, setOpen] = React.useState(false);
 
-    // Pass onValueChange through context so SelectItem can access it
-    const contextValue = React.useMemo(() => ({ onValueChange }), [onValueChange]);
+    // Pass onValueChange and value through context so SelectItem can access it
+    const contextValue = React.useMemo(() => ({ onValueChange, value }), [onValueChange, value]);
 
     return (
       <SelectPrimitive.Root open={open} onOpenChange={setOpen} value={value} onValueChange={onValueChange}>
@@ -84,12 +84,11 @@ jest.mock('../src/components/ui/select', () => {
   MockSelectTrigger.displayName = 'MockSelectTrigger';
 
   const MockSelectValue = ({ children, placeholder }: any) => {
-    // Render the actual value or placeholder.
-    // The real SelectValue renders the actual value if 'value' is provided to SelectRoot
-    // For our mock, let's just render the placeholder or children
+    const { value } = React.useContext(MockSelectContext);
+    console.log('MockSelectValue value:', value);
     return (
       <SelectPrimitive.Value data-testid="mock-select-value" placeholder={placeholder}>
-        {children || placeholder}
+        {value || children || placeholder}
       </SelectPrimitive.Value>
     );
   };
@@ -164,8 +163,10 @@ describe('SettingsPage', () => {
   it('displays the current billing cycle start day', async () => {
     (useLiveQuery as jest.Mock).mockReturnValue({ id: 1, billingCycleStart: 10 });
     render(<SettingsPage />);
+    // Find the select trigger by its associated label
+    const selectTrigger = screen.getByLabelText('Cycle starts on day:');
     // The SelectValue inside SelectTrigger should display the value
-    const selectValueSpan = screen.getByTestId('mock-select-value');
+    const selectValueSpan = within(selectTrigger).getByTestId('mock-select-value');
     expect(selectValueSpan).toHaveTextContent('10');
   });
 
@@ -183,7 +184,7 @@ describe('SettingsPage', () => {
     });
 
     // Open the select dropdown
-    const comboboxTrigger = screen.getByTestId('mock-select-trigger');
+    const comboboxTrigger = screen.getByLabelText('Cycle starts on day:');
     fireEvent.click(comboboxTrigger);
 
     // Select a new value
@@ -207,7 +208,7 @@ describe('SettingsPage', () => {
     });
 
     // Open the select dropdown
-    const comboboxTrigger = screen.getByTestId('mock-select-trigger');
+    const comboboxTrigger = screen.getByLabelText('Cycle starts on day:');
     fireEvent.click(comboboxTrigger);
 
     // Click the same value again (which should not trigger an update)
