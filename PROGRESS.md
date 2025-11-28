@@ -113,3 +113,16 @@ You can now open the native projects in Android Studio and Xcode to build and ru
 *   **Receipt Format Test Suite (`tests/e2e-receipt-formats.spec.ts`):**
     *   Created a new E2E test suite to test the OCR extraction logic with different receipt formats.
     *   Includes a test for standard receipts and a test for "slips" that only contain a total amount.
+---
+
+## Capacitor Build Fixes:
+
+### Addressing `index.html` and "Loading..." Issues:
+*   **Root Cause Identification:** The "loading..." issue and `index.html` complaints were identified as stemming from an incomplete or incorrectly accessed static export of the Next.js application by Capacitor.
+*   **Resolved TypeScript Errors:** Fixed multiple TypeScript errors in `src/lib/db.ts` related to incorrect access of Dexie.js stores (`trans.settings` and `trans.categories`) within upgrade scripts and missing `currency` property in `seedSettings`.
+*   **Corrected Currency Default:** Ensured that the default currency for new settings and during database upgrades is correctly set to 'ZAR' as per user specification.
+*   **Build Process Verification:** Confirmed that `npm run build` now completes successfully, correctly generating the `out` directory with all necessary static assets.
+*   **Capacitor Sync Success:** `npx cap sync` now runs without errors related to `index.html` or web asset synchronization. The Capacitor projects for iOS and Android are correctly updated.
+
+### Next Steps for User (Capacitor):
+The native Android and iOS projects should now build and run the web application correctly. Users can proceed with opening these projects in their respective IDEs (Android Studio for Android, Xcode for iOS) to finalize the native builds.

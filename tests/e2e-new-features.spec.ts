@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test.describe('New Features E2E', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      globalThis.TransformStream = require('web-streams-polyfill').TransformStream;
+    });
     // Navigate to the root of the app
     await page.goto('http://localhost:3000/');
   });

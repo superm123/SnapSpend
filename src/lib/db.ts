@@ -58,9 +58,9 @@ class SnapSpendDatabase extends Dexie {
       settings: '++id, currency', // Added 'currency'
     }).upgrade(async (trans) => {
       // Add default currency to existing settings
-      await trans.settings.toCollection().modify((setting) => {
+      await trans.table('settings').toCollection().modify((setting) => {
         if (!setting.currency) {
-          setting.currency = 'USD'; // Default value for existing settings
+          setting.currency = 'ZAR'; // Default value for existing settings
         }
       });
 
@@ -70,9 +70,9 @@ class SnapSpendDatabase extends Dexie {
         { name: 'Housing' }, { name: 'Utilities' }, { name: 'Transportation' }, { name: 'Entertainment' },
       ];
       for (const newCat of allSeedCategories) {
-        const existingCat = await trans.categories.where('name').equalsIgnoreCase(newCat.name).first();
+        const existingCat = await trans.table('categories').where('name').equalsIgnoreCase(newCat.name).first();
         if (!existingCat) {
-          await trans.categories.add(newCat);
+          await trans.table('categories').add(newCat);
         }
       }
     });
@@ -94,7 +94,7 @@ class SnapSpendDatabase extends Dexie {
     const seedUsers = [{ name: 'Default User' }];
     await db.users.bulkAdd(seedUsers);
 
-    const seedSettings = [{ billingCycleStart: 20 }];
+    const seedSettings = [{ billingCycleStart: 20, currency: 'ZAR' }];
     await db.settings.bulkAdd(seedSettings);
   }
 }

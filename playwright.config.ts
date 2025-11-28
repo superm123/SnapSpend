@@ -28,12 +28,6 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    context: {
-      storageState: undefined,
-      addInitScript: ({ }, script) => {
-        script.globalThis.TransformStream = require('web-streams-polyfill').TransformStream;
-      },
-    },
   },
 
   /* Configure projects for major browsers */

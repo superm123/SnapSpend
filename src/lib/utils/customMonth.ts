@@ -1,30 +1,23 @@
 import { addMonths, subDays, setDate, lastDayOfMonth } from 'date-fns';
 
 export function getBillingCycleDates(billingCycleStartDay: number, date: Date = new Date()) {
-  const year = date.getFullYear();
-  const month = date.getMonth();
   let cycleStartDate: Date;
   let cycleEndDate: Date;
 
-  const getValidDay = (monthDate: Date, day: number) => {
-    return Math.min(day, lastDayOfMonth(monthDate).getDate());
-  };
+  const currentMonthLastDay = lastDayOfMonth(date).getDate();
+  const effectiveBillingCycleStartDay = Math.min(billingCycleStartDay, currentMonthLastDay);
 
-  if (date.getDate() < billingCycleStartDay) {
+  const potentialStartDateCurrentMonth = setDate(date, effectiveBillingCycleStartDay);
+
+  if (date.getDate() < effectiveBillingCycleStartDay) {
     // Cycle started in the previous month
-    const prevMonthDate = addMonths(date, -1);
-    const startDay = getValidDay(prevMonthDate, billingCycleStartDay);
-    cycleStartDate = new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth(), startDay);
-    const endDay = getValidDay(date, billingCycleStartDay - 1);
-    cycleEndDate = new Date(year, month, endDay);
+    cycleStartDate = addMonths(potentialStartDateCurrentMonth, -1);
   } else {
     // Cycle started in the current month
-    const startDay = getValidDay(date, billingCycleStartDay);
-    cycleStartDate = new Date(year, month, startDay);
-    const nextMonthDate = addMonths(date, 1);
-    const endDay = getValidDay(nextMonthDate, billingCycleStartDay - 1);
-    cycleEndDate = new Date(nextMonthDate.getFullYear(), nextMonthDate.getMonth(), endDay);
+    cycleStartDate = potentialStartDateCurrentMonth;
   }
+
+  cycleEndDate = subDays(addMonths(cycleStartDate, 1), 1);
 
   // Normalize dates to avoid issues with timezones and DST
   cycleStartDate.setHours(0, 0, 0, 0);
