@@ -41,6 +41,7 @@ jest.mock('../src/lib/db', () => ({
     settings: {
       get: jest.fn(),
       update: jest.fn(),
+      add: jest.fn(), // Add the missing mock for 'add'
     },
   },
 }));
@@ -136,12 +137,37 @@ jest.mock('../src/components/ui/select', () => {
 
 describe('SettingsPage', () => {
   const mockRouterPush = jest.fn();
+  // Variable to control the settings returned by db.settings.get and useLiveQuery
+  let mockedSettings: { id: number; billingCycleStart: number; currency?: string } | undefined;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedSettings = { id: 1, billingCycleStart: 20, currency: 'USD' }; // Default mock settings
+
     (useRouter as jest.Mock).mockReturnValue({ push: mockRouterPush });
-    // Default mock for useLiveQuery for settings.get(1)
-    (useLiveQuery as jest.Mock).mockReturnValue({ id: 1, billingCycleStart: 20 });
+    // Make useLiveQuery react to changes in mockedSettings
+    (useLiveQuery as jest.Mock).mockImplementation((queryFn) => {
+      // For initial render, return the current state of mockedSettings directly.
+      // We are not simulating live updates from Dexie here, just the initial fetch.
+      return mockedSettings;
+    });
+
+    // Mock db.settings.get to return the current mockedSettings state
+    (db.settings.get as jest.Mock).mockImplementation((id) => {
+      return Promise.resolve(mockedSettings);
+    });
+
+    // Mock db.settings.update to modify mockedSettings and resolve
+    (db.settings.update as jest.Mock).mockImplementation((id, changes) => {
+        mockedSettings = { ...mockedSettings, ...changes };
+        return Promise.resolve(true); // Indicate successful update
+    });
+
+    // Mock db.settings.add
+    (db.settings.add as jest.Mock).mockImplementation((settings) => {
+        mockedSettings = { ...settings, id: 1 }; // Assume id 1 for added settings
+        return Promise.resolve(1);
+    });
 
     // Mock window.HTMLElement.prototype.scrollIntoView as it's not implemented in JSDOM
     window.HTMLElement.prototype.scrollIntoView = jest.fn();

@@ -34,6 +34,11 @@ class CustomTestEnvironment extends JSDOMEnvironment {
       },
       writable: true,
     });
+
+    // Polyfill TransformStream for environments that might need it (e.g., Playwright's Node.js runner)
+    if (typeof this.global.TransformStream === 'undefined') {
+      this.global.TransformStream = require('web-streams-polyfill').TransformStream;
+    }
   }
 
   async teardown() {

@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Receipt Format E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      globalThis.TransformStream = globalThis.TransformStream || class TransformStream {};
+    });
     // Navigate to the scan page
     await page.goto('http://localhost:3000/scan');
   });

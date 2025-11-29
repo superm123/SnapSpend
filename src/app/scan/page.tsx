@@ -52,6 +52,8 @@ export default function ScanPage() {
   const [loadingOcr, setLoadingOcr] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [placeName, setPlaceName] = useState(''); // New state for place name
+  const [showRawOcr, setShowRawOcr] = useState(false); // State to toggle raw OCR visibility
+  const [newItem, setNewItem] = useState<{ description: string; amount: string }>({ description: '', amount: '' }); // New state for adding manual items
 
   const categories = useLiveQuery(() => db.categories.toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
@@ -200,6 +202,24 @@ export default function ScanPage() {
     setLineItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
+  const handleAddNewItem = () => {
+    const amountNum = parseFloat(newItem.amount);
+    if (!newItem.description || isNaN(amountNum) || amountNum <= 0) {
+      alert('Please enter a valid description and amount for the new item.');
+      return;
+    }
+
+    setLineItems((prevItems) => [
+      ...prevItems,
+      {
+        id: Math.max(0, ...prevItems.map(item => item.id)) + 1, // Generate a new unique ID
+        description: newItem.description,
+        amount: amountNum,
+      },
+    ]);
+    setNewItem({ description: '', amount: '' }); // Clear input fields
+  };
+
   const saveExpenses = async () => {
     if (lineItems.length === 0 || !currentUser?.id) {
         alert(!currentUser?.id ? 'Please select a user in settings.' : 'No line items to save.');
@@ -298,9 +318,15 @@ export default function ScanPage() {
             {loadingOcr ? `Processing... ${Math.round(ocrProgress * 100)}%` : 'Scan Receipt'}
           </Button>
           {loadingOcr && <LinearProgress variant="determinate" value={ocrProgress * 100} sx={{ mt: 1 }} />}
+
+          {ocrResult && (
+            <Button onClick={() => setShowRawOcr(!showRawOcr)} fullWidth variant="outlined" sx={{ mt: 2 }}>
+              {showRawOcr ? 'Hide Raw OCR Result' : 'Show Raw OCR Result'}
+            </Button>
+          )}
         </Paper>
 
-        {ocrResult && (
+        {ocrResult && showRawOcr && (
           <Paper sx={{ p: 2, mb: 4 }}>
             <Typography variant="h6" gutterBottom>OCR Result (Raw Text)</Typography>
             <TextField value={ocrResult} InputProps={{ readOnly: true }} multiline rows={10} fullWidth variant="outlined" />
@@ -360,6 +386,28 @@ export default function ScanPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            <Box sx={{ mt: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+              <TextField
+                label="New Item Description"
+                variant="outlined"
+                value={newItem.description}
+                onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                sx={{ flexGrow: 1 }}
+              />
+              <TextField
+                label="Amount"
+                variant="outlined"
+                type="number"
+                value={newItem.amount}
+                onChange={(e) => setNewItem({ ...newItem, amount: e.target.value })}
+                sx={{ width: 120 }}
+              />
+              <Button onClick={handleAddNewItem} variant="contained" sx={{ height: 56 }}>
+                Add Item
+              </Button>
+            </Box>
+
             <Button onClick={saveExpenses} fullWidth variant="contained" sx={{ mt: 2 }}>
               Save Expenses
             </Button>

@@ -11,6 +11,8 @@ jest.mock('../src/lib/db', () => ({
     },
     settings: {
       toCollection: jest.fn(),
+      get: jest.fn(), // Add get method to mock
+      add: jest.fn(), // Add add method to mock
     },
   },
 }));
@@ -23,7 +25,6 @@ describe('useStore', () => {
   const initialState = useStore.getState();
 
   let mockUsersToCollectionFirst: jest.Mock;
-  let mockSettingsToCollectionFirst: jest.Mock;
 
   beforeEach(() => {
     // Reset store to its initial state, including actions
@@ -36,8 +37,9 @@ describe('useStore', () => {
     mockUsersToCollectionFirst = jest.fn();
     (db.users.toCollection as jest.Mock).mockReturnValue({ first: mockUsersToCollectionFirst });
 
-    mockSettingsToCollectionFirst = jest.fn();
-    (db.settings.toCollection as jest.Mock).mockReturnValue({ first: mockSettingsToCollectionFirst });
+    // Mock db.settings.get directly as it's called in store.ts
+    (db.settings.get as jest.Mock).mockResolvedValue(undefined); // Default to no settings found
+    (db.settings.add as jest.Mock).mockResolvedValue(1); // Default for adding new settings
   });
 
   it('should set and get currentUser', () => {
@@ -88,26 +90,25 @@ describe('useStore', () => {
 
     it('should initialize billingCycleStart from existing settings in db', async () => {
       const mockSettings = { id: 1, billingCycleStart: 5 };
-      mockSettingsToCollectionFirst.mockResolvedValueOnce(mockSettings);
+      (db.settings.get as jest.Mock).mockResolvedValueOnce(mockSettings);
 
       await act(async () => {
         await useStore.getState().init();
       });
 
-      expect(db.settings.toCollection).toHaveBeenCalled();
-      expect(mockSettingsToCollectionFirst).toHaveBeenCalled();
+      expect(db.settings.get).toHaveBeenCalledWith(1); // Changed from toCollection
+      // No longer expecting mockSettingsToCollectionFirst as db.settings.get is directly mocked
       expect(useStore.getState().billingCycleStart).toBe(mockSettings.billingCycleStart);
     });
 
     it('should use default billingCycleStart if no settings are found in db', async () => {
-      mockSettingsToCollectionFirst.mockResolvedValueOnce(undefined);
+      (db.settings.get as jest.Mock).mockResolvedValueOnce(undefined); // No settings found
 
       await act(async () => {
         await useStore.getState().init();
       });
 
-      expect(db.settings.toCollection).toHaveBeenCalled();
-      expect(mockSettingsToCollectionFirst).toHaveBeenCalled();
+      expect(db.settings.get).toHaveBeenCalledWith(1); // Changed from toCollection
       expect(useStore.getState().billingCycleStart).toBe(20); // Default value
     });
   });
