@@ -3,13 +3,21 @@ set -e
 
 # CONFIGURATION
 REPO_ROOT=$(pwd)
-APP_ROOT="$REPO_ROOT/ios"
+APP_ROOT="$REPO_ROOT/ios/App"
 WORKSPACE_PATH="$APP_ROOT/App.xcworkspace"
 SCHEME_NAME="App"
 CONFIGURATION="Release"
 IPA_OUTPUT_DIR="$APP_ROOT/build"
 ARCHIVE_PATH="$IPA_OUTPUT_DIR/App.xcarchive"
 EXPORT_OPTIONS="$IPA_OUTPUT_DIR/ExportOptions.plist"
+
+
+echo "xcodebuild -exportArchive \
+  -archivePath \"$ARCHIVE_PATH\" \
+  -exportOptionsPlist \"$EXPORT_OPTIONS\" \
+  -exportPath \"$IPA_OUTPUT_DIR\" \
+  -allowProvisioningUpdates"
+
 
 echo "---------------------------------------------------------"
 echo "STEP 1: Bump build number"
@@ -48,17 +56,20 @@ cat << EOF > "$EXPORT_OPTIONS"
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>method</key>
-  <string>app-store</string>
-  <key>uploadBitcode</key>
-  <false/>
-  <key>uploadSymbols</key>
-  <true/>
-
-  <key>signingStyle</key>
-<string>automatic</string>
-<key>teamID</key>
-<string>574D2QV4CS</string> 
+	<key>destination</key>
+	<string>export</string>
+	<key>manageAppVersionAndBuildNumber</key>
+	<true/>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>stripSwiftSymbols</key>
+	<true/>
+	<key>teamID</key>
+	<string>574D2QV4CS</string>
+	<key>uploadSymbols</key>
+	<true/>
 </dict>
 </plist>
 
