@@ -48,16 +48,21 @@ cat << EOF > "$EXPORT_OPTIONS"
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>method</key>
-    <string>app-store</string>
-    <key>uploadSymbols</key>
-    <true/>
-    <key>compileBitcode</key>
-    <true/>
-    <key>signingStyle</key>
-    <string>automatic</string>
+  <key>method</key>
+  <string>app-store</string>
+  <key>uploadBitcode</key>
+  <false/>
+  <key>uploadSymbols</key>
+  <true/>
+
+  <key>signingStyle</key>
+<string>automatic</string>
+<key>teamID</key>
+<string>574D2QV4CS</string> 
 </dict>
 </plist>
+
+
 EOF
 
 xcodebuild -exportArchive \

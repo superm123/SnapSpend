@@ -142,15 +142,11 @@ describe('SettingsPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedSettings = { id: 1, billingCycleStart: 20, currency: 'USD' }; // Default mock settings
+    mockedSettings = { id: 1, billingCycleStart: 20, currency: 'USD' }; // Reinitialize mockedSettings for each test
 
     (useRouter as jest.Mock).mockReturnValue({ push: mockRouterPush });
-    // Make useLiveQuery react to changes in mockedSettings
-    (useLiveQuery as jest.Mock).mockImplementation((queryFn) => {
-      // For initial render, return the current state of mockedSettings directly.
-      // We are not simulating live updates from Dexie here, just the initial fetch.
-      return mockedSettings;
-    });
+    // Make useLiveQuery return the current state of mockedSettings
+    (useLiveQuery as jest.Mock).mockReturnValue(mockedSettings); // Simplified to always return the current mockedSettings
 
     // Mock db.settings.get to return the current mockedSettings state
     (db.settings.get as jest.Mock).mockImplementation((id) => {

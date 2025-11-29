@@ -18,7 +18,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (settings) {
-      setBillingCycleStart(settings.billingCycleStart.toString());
+      setBillingCycleStart(settings.billingCycleStart?.toString() || '20');
     }
   }, [settings]);
 

@@ -17,7 +17,17 @@ export const useStore = create<AppState>((set) => ({
   currentUser: null,
   setCurrentUser: (user) => set({ currentUser: user }),
   billingCycleStart: 20, // default value
-  setBillingCycleStart: (day) => set({ billingCycleStart: day }),
+  setBillingCycleStart: async (day) => {
+    set({ billingCycleStart: day }); // Updates Zustand state
+    // Persist billingCycleStart to settings
+    const settings = await db.settings.get(1);
+    console.log('setBillingCycleStart: settings.billingCycleStart:', settings?.billingCycleStart, 'day:', day);
+    if (settings && settings.billingCycleStart !== day) { // This check is crucial
+      await db.settings.update(1, { billingCycleStart: day });
+    } else if (!settings) {
+      await db.settings.add({ id: 1, billingCycleStart: day, currency: getCurrencyFromLocale(navigator.language) }); // Create with default billingCycleStart
+    }
+  },
   currency: 'USD', // default value
   setCurrency: async (currency) => {
     set({ currency });
