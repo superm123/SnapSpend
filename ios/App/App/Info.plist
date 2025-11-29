@@ -47,5 +47,11 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to allow you to select images for receipts and attach them to your expenses.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to capture photos of receipts for expense tracking.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs to add captured receipt images to your photo library for your convenience.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to your microphone to record audio when capturing video for receipts, if supported by the device.</string>
 </dict>
 </plist>
