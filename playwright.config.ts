@@ -11,7 +11,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  globalSetup: require.resolve('./playwright.global-setup.ts'),
+  testMatch: /.*e2e-.*\.spec\.ts/,
+  globalSetup: './playwright.global-setup.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
