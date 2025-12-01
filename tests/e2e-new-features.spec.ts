@@ -6,7 +6,7 @@ test.describe('New Features E2E', () => {
       globalThis.TransformStream = globalThis.TransformStream || class TransformStream {};
     });
     // Navigate to the root of the app
-    await page.goto('http://localhost:3000/');
+    await page.goto('http://localhost:3000/', { waitUntil: 'networkidle' });
   });
 
   test('should display the "Scan with Camera" button on the scan page', async ({ page }) => {
@@ -19,7 +19,7 @@ test.describe('New Features E2E', () => {
   });
 
   test('should allow removing a line item from the list', async ({ page }) => {
-    await page.goto('http://localhost:3000/scan');
+    await page.goto('http://localhost:3000/scan', { waitUntil: 'networkidle' });
 
     // Mock file upload
     const fileChooserPromise = page.waitForEvent('filechooser');
@@ -66,7 +66,7 @@ test.describe('New Features E2E', () => {
 
   test('should trigger a download when "Export to CSV" is clicked', async ({ page }) => {
     // Navigate to the history page
-    await page.goto('http://localhost:3000/history');
+    await page.goto('http://localhost:3000/history', { waitUntil: 'networkidle' });
 
     // Wait for the download event
     const downloadPromise = page.waitForEvent('download');

@@ -126,3 +126,21 @@ You can now open the native projects in Android Studio and Xcode to build and ru
 
 ### Next Steps for User (Capacitor):
 The native Android and iOS projects should now build and run the web application correctly. Users can proceed with opening these projects in their respective IDEs (Android Studio for Android, Xcode for iOS) to finalize the native builds.
+
+---
+## Recent Fixes and Updates:
+
+### Playwright E2E Tests:
+*   Initial attempt to run Playwright E2E tests resulted in `ReferenceError: require is not defined` due to ES module conflicts in `playwright.config.ts` and `playwright.global-setup.ts`.
+*   **Fix 1:** Modified `playwright.config.ts` to directly import `playwright.global-setup.ts`.
+*   **Fix 2:** Modified `playwright.global-setup.ts` to use `import` for `web-streams-polyfill` instead of `require`.
+*   **Configuration:** Configured `playwright.config.ts` with `testMatch: /.*e2e-.*\.spec\.ts/,` to ensure only Playwright E2E tests are executed.
+*   **Current Status:** After these fixes and configurations, the Playwright E2E tests are now running without test runner crashes, but are currently *failing*. Further analysis of the test report is needed to identify the root causes of these failures.
+
+### iOS Info.plist Modifications:
+*   Addressed App Store Connect rejection (ITMS-90683) by adding `NSPhotoLibraryUsageDescription` to `ios/App/App/Info.plist`.
+*   Proactively added `NSCameraUsageDescription`, `NSPhotoLibraryAddUsageDescription`, and `NSMicrophoneUsageDescription` to `ios/App/App/Info.plist` with appropriate user-facing strings.
+*   Ran `npx cap sync ios` after each modification to ensure changes were propagated to the native iOS project.
+
+### Merge Conflicts:
+*   Resolved merge conflicts in `build_archive.sh` and `ios/App/App/Info.plist`.

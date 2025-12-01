@@ -23,3 +23,9 @@ Include IOS and Android Build plans
 Record Progress in PROGRESS.md dont overwrite whats already there.
 
 DOnt consider project done if it compiles it needs to be 100% functional
+
+When runnign test use the PW_TEST_HTML_REPORT_OPEN = "never" variable to avoid getting stuck
+ $env:PW_TEST_HTML_REPORT_OPEN = "never"
+>>
+>> # Run Playwright tests
+>> npx playwright test
