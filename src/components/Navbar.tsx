@@ -84,7 +84,7 @@ export default function Navbar() {
   );
 
   return (
-    <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', paddingTop: 'env(safe-area-inset-top)' }}>
+    <AppBar position="sticky" elevation={1} sx={{ bgcolor: '#000080', borderBottom: 1, borderColor: 'divider', paddingTop: 'env(safe-area-inset-top)' }}>
       <Toolbar>
         {isMobile && (
           <IconButton
