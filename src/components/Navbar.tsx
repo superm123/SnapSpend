@@ -23,9 +23,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { Scan, Plus, List as ListIcon, CreditCard, Settings, BarChart } from 'lucide-react'; // Use List as ListIcon to avoid conflict
-import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import { StatusBar, Style } from '@capacitor/status-bar'; // Import StatusBar and Style
+import { Capacitor } from '@capacitor/core';
+import { useTheme } from 'next-themes';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: ListIcon },
@@ -43,6 +44,7 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [statusBarHeight, setStatusBarHeight] = useState(0); // State to store status bar height
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
 
@@ -53,6 +55,13 @@ export default function Navbar() {
       StatusBar.setStyle({ style: Style.Light });
     } else {
       StatusBar.setStyle({ style: Style.Dark });
+    }
+
+    // Get status bar height for native platforms
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.getInfo().then((info) => {
+        setStatusBarHeight(info.height);
+      });
     }
   }, [theme]); // Rerun effect when theme changes
 
@@ -91,7 +100,16 @@ export default function Navbar() {
   );
 
   return (
-    <AppBar position="sticky" elevation={1} sx={{ bgcolor: '#000080', borderBottom: 1, borderColor: 'divider', paddingTop: 'env(safe-area-inset-top)' }}>
+    <AppBar
+      position="sticky"
+      elevation={1}
+      sx={{
+        bgcolor: '#000080',
+        borderBottom: 1,
+        borderColor: 'divider',
+        paddingTop: `${statusBarHeight}px`, // Dynamically set paddingTop
+      }}
+    >
       <Toolbar>
         {isMobile && (
           <IconButton
