@@ -7,6 +7,12 @@ EXACT REQUIRED FEATURES (implement ALL):1. Receipt scanner page (/scan)   
  - NEW FEATURE - group lite items in bills record name of place as well
  - NEW FEATURE -figure out the category based on previous use
 2. Manual add expense page (/add)
+2.5. Bank Statement Import (PDF)
+    - Client-side PDF processing using `react-pdf` to extract text content.
+    - If PDF contains scanned images, leverage existing `Tesseract.js` for OCR.
+    - Implement client-side logic to parse extracted text into structured transaction data (date, description, amount, etc.).
+    - Present extracted data for user review/editing.
+    - Save structured transaction data to Dexie.js.
 3. Categories & Payment Methods pages (full CRUD)   - Pre-seeded: Fuel, Groceries, Medical, Other   - Payments: Cash, Visa, Mastercard
 4. Multi-user (family mode)   - Settings → add/remove users (name only)   - Every expense has "addedBy"
 5. Custom billing cycle (default 20th → 19th next month)   - Settings → change start day (1–31)   - All summaries respect current cycle
