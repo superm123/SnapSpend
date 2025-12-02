@@ -102,7 +102,7 @@ export default function Navbar() {
           sx={{
             flexGrow: 1,
             textDecoration: 'none',
-          
+
             fontWeight: 'bold',
           }}
         >
@@ -131,12 +131,12 @@ export default function Navbar() {
           </Stack>
         )}
 
-                  <IconButton
-                    sx={{ ml: 2, color: muiTheme.palette.text.primary }} // Explicitly set color
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  >
-                    {theme === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-                  </IconButton>
+        <IconButton
+          sx={{ ml: 2, color: muiTheme.palette.text.primary }} // Explicitly set color
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        >
+          {theme === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+        </IconButton>
         <Drawer
           anchor="left"
           open={mobileOpen}

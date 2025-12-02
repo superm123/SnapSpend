@@ -17,7 +17,7 @@ This document summarizes the progress made on the "SnapSpend" project, an offlin
     *   File upload/drag-drop (using `react-dropzone`).
     *   Integration with Tesseract.js for OCR.
     *   Regex-based extraction of line items from OCR output.
-    *   An editable table for extracted items.
+    *   An editable table (edit desc/amount/category inline)
     *   Saving of the receipt image (base64) and line items as expenses to Dexie.js.
 11. **Implement the Dashboard**: The dashboard page (`src/app/summary/page.tsx`) was implemented to display:
     *   Total expenses for the current billing cycle.
@@ -144,3 +144,60 @@ The native Android and iOS projects should now build and run the web application
 
 ### Merge Conflicts:
 *   Resolved merge conflicts in `build_archive.sh` and `ios/App/App/Info.plist`.
+
+---
+
+## Re-implementing E2E Testing with Programmatic Playwright
+
+**Objective:** Implement E2E testing using Playwright's programmatic API to ensure a fully automated and headless testing setup that requires no user interaction for configuration or execution, providing clear, non-interactive output.
+
+### **Phase 1: Project Cleanup (Revert Cypress Installation & Finalize Playwright Deletion)**
+*   **Status:** Completed
+*   **Estimated Time:** 30 minutes
+*   **Description:** This phase involves systematically removing all traces of Cypress (which was partially installed) and ensuring all Playwright traces from the *initial* cleanup are truly gone, in preparation for a fresh, programmatic Playwright setup.
+
+    *   **Step 1.1: Remove Cypress Dependency:**
+        *   Removed `cypress` from `devDependencies` in `package.json`.
+        *   Ran `npm install` to update `node_modules` and `package-lock.json`.
+    *   **Step 1.2: Remove Cypress Configuration & Default Files:**
+        *   Verified that `cypress/` directory and `cypress.config.ts` were not created, so no deletion was necessary.
+    *   **Step 1.3: Update `PROGRESS.md`:** This step is currently being performed.
+
+### **Phase 2: Reinstall Playwright (as a library for programmatic use)**
+*   **Status:** Completed
+*   **Estimated Time:** 30 minutes
+*   **Description:** Reinstall Playwright, focusing on its use as a programmatic library that requires zero human interaction for setup or execution.
+
+    *   **Step 2.1: Add Playwright Dependency:**
+        *   Added `@playwright/test` back to `devDependencies` in `package.json`.
+        *   Ran `npm install` to update `node_modules` and `package-lock.json`.
+    *   **Step 2.2: Create `playwright.config.ts` (Programmatic & Minimal):**
+        *   Created `playwright.config.ts` with essential configurations for headless execution and non-interactive reporters, ensuring no HTML report opens by default.
+
+
+### **Phase 3: Test Rewriting (Programmatic E2E Tests)**
+*   **Status:** Pending
+*   **Estimated Time:** 8-12 hours (depending on test complexity and application state management)
+*   **Description:** Rewrite the E2E tests using Playwright's programmatic API directly. This phase focuses on re-implementing the original E2E test scenarios with full programmatic control and headless execution, ensuring no interactive steps are required during runtime.
+
+    *   **Step 3.1: Recreate E2E Test Files:**
+        *   Created new test files under the `tests/` directory: `tests/e2e-scan-flow.spec.ts`, `tests/e2e-receipt-formats.spec.ts`, `tests/e2e-new-features.spec.ts`.
+    *   **Step 3.2: Implement Tesseract Mocking (Programmatic & Robust):**
+        *   **Status:** Failed (Initial attempt to mock `createWorker` via `page.route` by injecting `window.createWorker` into `tesseract.min.js` was unsuccessful. `window.createWorker` was `undefined` in test assertions, indicating the ES module import in `src/app/scan/page.tsx` bypassed the global override).
+        *   **New Plan:** The current approach to mock `createWorker` by directly modifying `tesseract.min.js`'s global `createWorker` function within `page.route` is ineffective because `src/app/scan/page.tsx` imports `createWorker` as an ES module, which bypasses global `window` assignments. A more robust programmatic approach is needed. I will now investigate the actual network requests made by `tesseract.js` when the application runs (specifically, the `scan` page) to identify the URLs of the Tesseract worker scripts (e.g., `.wasm` or `.js` files). Once these URLs are known, `page.route` can be used to intercept these *worker script requests* and serve custom mock workers or modify their behavior, which is a more reliable way to mock Tesseract in an E2E context without altering application code. This investigation is a necessary information-gathering step, not a human interaction for test execution.
+    *   **Step 3.3: Implement Database Seeding (Programmatic):**
+        *   Ensure database seeding is performed programmatically. This can be achieved by using `page.evaluate` to interact directly with Dexie.js (`db`) on the client side, after conditionally exposing `db` to the `window` object in a test environment.
+    *   **Step 3.4: File Uploads & Downloads:**
+        *   Implement file uploads using `page.setInputFiles()` and verify downloads using `page.waitForEvent('download')`, entirely programmatically.
+
+### **Phase 4: Execution and Reporting (Programmatic & Headless)**
+*   **Status:** Pending
+*   **Estimated Time:** 1 hour
+*   **Description:** Define and configure project scripts for running E2E tests and generating non-interactive reports, suitable for CI/CD environments.
+
+    *   **Step 4.1: Update `package.json` scripts:**
+        *   Add a `test:e2e` script that runs Playwright tests in headless mode with a non-interactive reporter (e.g., `playwright test --headless --reporter=list`).
+    *   **Step 4.2: (Optional) CI/CD Integration:**
+        *   If applicable, update CI/CD pipelines to use the new Playwright commands for automated E2E testing.
+    *   **Step 4.3: Review and Refine:**
+        *   Conduct a final review of all Playwright tests and configurations to ensure they adhere to best practices, are maintainable, robust, and require zero human interaction.

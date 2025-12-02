@@ -24,6 +24,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     init(); // Call init function to initialize state
   }, [init]);
 
+
+
   const { theme } = useTheme();
 
   useEffect(() => {

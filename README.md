@@ -12,7 +12,7 @@ EXACT REQUIRED FEATURES (implement ALL):1. Receipt scanner page (/scan)   
 5. Custom billing cycle (default 20th → 19th next month)   - Settings → change start day (1–31)   - All summaries respect current cycle
 6. Dashboard (/summary)   - Big total for current cycle   - Pie chart: category breakdown   - Bar chart: payment method breakdown
 7. 100% offline with Dexie.js (IndexedDB)   - Tables: expenses, categories, paymentMethods, users, settings
-8. Full test suite   - Jest + RTL unit & component tests   - Playwright E2E test for: scan → edit → save → appears in summary
+8. Full test suite - Jest + RTL unit & component tests - Cypress E2E test for: scan → edit → save → appears in summary
 9. Add more categories that make sense
 Exact folder structure:src/app/(routes)/(scan|add|summary|categories|payments|settings)/page.tsxsrc/components/ui → shadcnsrc/lib/db.ts (Dexie)src/lib/store.ts (Zustand)src/lib/utils/customMonth.ts
 Mobile-first, dark mode, clean UI, no auth, no backend.
@@ -24,7 +24,7 @@ Record Progress in PROGRESS.md dont overwrite whats already there.
 
 DOnt consider project done if it compiles it needs to be 100% functional
 
-When runnign test use the PW_TEST_HTML_REPORT_OPEN = "never" variable to avoid getting stuck
+When running test use the PW_TEST_HTML_REPORT_OPEN = "never" variable to avoid getting stuck
  $env:PW_TEST_HTML_REPORT_OPEN = "never"
 >>
 >> # Run Playwright tests
