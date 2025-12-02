@@ -25,6 +25,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { Scan, Plus, List as ListIcon, CreditCard, Settings, BarChart } from 'lucide-react'; // Use List as ListIcon to avoid conflict
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
+import { StatusBar, Style } from '@capacitor/status-bar'; // Import StatusBar and Style
 
 const navLinks = [
   { href: '/', label: 'Home', icon: ListIcon },
@@ -47,7 +48,13 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Set status bar style based on theme
+    if (theme === 'dark') {
+      StatusBar.setStyle({ style: Style.Light });
+    } else {
+      StatusBar.setStyle({ style: Style.Dark });
+    }
+  }, [theme]); // Rerun effect when theme changes
 
   if (!mounted) return null;
 
