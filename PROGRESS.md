@@ -159,3 +159,5 @@ You can now open the native projects in Android Studio and Xcode to build and ru
     *   Utilize existing `Tesseract.js` for OCR if a PDF is determined to be a scanned image rather than a text-searchable document.
     *   Develop robust client-side JavaScript/TypeScript parsing logic to extract structured transaction data (date, description, amount, etc.) from the extracted text.
     *   Provide a user interface for reviewing and editing the extracted data before saving it to the Dexie.js (IndexedDB) database.
+
+DELETED FUNCTION ABOVE AS NOT IDEAL FOR SCENARIO> PLEASE FOLLOW RULES WHEN IMPLEMENTING

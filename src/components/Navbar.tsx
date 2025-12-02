@@ -56,13 +56,12 @@ export default function Navbar() {
     } else {
       StatusBar.setStyle({ style: Style.Dark });
     }
-
-    // Get status bar height for native platforms
     if (Capacitor.isNativePlatform()) {
-      StatusBar.getInfo().then((info) => {
-        setStatusBarHeight(info.height);
-      });
+      // Prevent the status bar from overlaying the WebView
+      StatusBar.setOverlaysWebView({ overlay: false });
     }
+    // Get status bar height for native platforms
+
   }, [theme]); // Rerun effect when theme changes
 
   if (!mounted) return null;

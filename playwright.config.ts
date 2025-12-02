@@ -2,34 +2,42 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e-tests', // Look for tests in the "e2e-tests" directory
-  /* Run tests in files in the order of their definition */
-  fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+
+  fullyParallel: true, // Run tests in files in the order of their definition
+  forbidOnly: !!process.env.CI, // Fail the build on CI if test.only is left in
+  retries: process.env.CI ? 2 : 0, // Retry on CI only
+  workers: process.env.CI ? 1 : undefined, // Opt out of parallel tests on CI
   reporter: 'list', // Use the "list" reporter for non-interactive output
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+
+  // Global test timeout
+  timeout: 15000,
+
+  // Timeout for expect() assertions
+  expect: {
+    timeout: 15000,
+  },
+
   use: {
-    timeout: 15000, // Increase default timeout for actions and expectations
-    expect: {
-      timeout: 15000, // Increase expect timeout for assertions
-    },
-    /* Base URL to use in actions like `await page.goto('/')`. */
+    // Optional defaults for actions and navigations
+    actionTimeout: 15000,
+    navigationTimeout: 15000,
+
+    // Base URL for page.goto('/')
     baseURL: 'http://localhost:3000',
 
-    /* Collect traces upon failing the first time. See https://playwright.dev/docs/trace-viewer */
+    // Collect traces upon failing the first time
     trace: 'on',
+
+    // Capture screenshots only on failure
     screenshot: 'only-on-failure',
-    /* Do not open HTML report. This ensures zero human interaction. */
+
+    // Browser launch options
     launchOptions: {
-      args: ['--disable-web-security'], // Needed for some scenarios like file uploads from outside the domain
+      args: ['--disable-web-security'], // Needed for scenarios like file uploads outside the domain
     },
   },
-  /* Configure projects for major browsers */
+
+  // Configure projects for major browsers
   projects: [
     {
       name: 'chromium',
@@ -44,5 +52,4 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
   ],
-
 });
