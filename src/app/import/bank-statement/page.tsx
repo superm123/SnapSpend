@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { PDFExtract } from 'pdf.js-extract';
+import dynamic from 'next/dynamic'; // Import dynamic
+
+// Dynamically import PDFExtract with ssr: false
+const PDFExtract = dynamic(() => import('pdf.js-extract').then(mod => mod.PDFExtract), { ssr: false });
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { StatusBar, Style } from '@capacitor/status-bar';
