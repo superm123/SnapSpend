@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { currencySymbolMap } from '@/lib/utils/currency';
-import { createWorker } from 'tesseract.js';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, IExpense } from '@/lib/db';
 import { useRouter } from 'next/navigation';
@@ -31,7 +30,8 @@ import {
   LinearProgress,
   SelectChangeEvent,
 } from '@mui/material';
-import { Upload, XCircle, Loader2, Camera as CameraIcon, Trash2 } from 'lucide-react';
+import { Upload, XCircle, Camera as CameraIcon, Trash2 } from 'lucide-react';
+import { createWorker } from 'tesseract.js';
 
 interface LineItem {
   id: number;
@@ -140,7 +140,7 @@ export default function ScanPage() {
 
     // Create a regex that matches any of the currency symbols
     const currencySymbols = Object.values(currencySymbolMap).join('');
-    const itemRegex = new RegExp(`(.*?)\\s+([${currencySymbols}]?\\s?\\d+\\.\\d{2})$`, 'i');
+    const itemRegex = new RegExp(`(.*?)\\s+([${currencySymbols}]?\\s?\\d+\\.\\d{2})`, 'i');
     const totalRegex = /Total|Balance Due|Amount Due/i;
 
     for (const line of lines) { // Use for...of for async/await
@@ -242,7 +242,6 @@ export default function ScanPage() {
       alert('Expenses saved successfully!');
       setImage(null);
       setBase64Image(null);
-      setOcrResult('');
       setLineItems([]);
       setPlaceName(''); // Clear place name after saving
       router.push('/summary');
@@ -308,7 +307,7 @@ export default function ScanPage() {
               <Image src={image} alt="Receipt Preview" layout="fill" objectFit="contain" />
               <IconButton
                 sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(255, 255, 255, 0.7)' }}
-                onClick={() => { setImage(null); setBase64Image(null); setOcrResult(''); setLineItems([]); }}
+                onClick={() => { setImage(null); setBase64Image(null); setLineItems([]); }}
               >
                 <XCircle />
               </IconButton>

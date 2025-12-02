@@ -25,6 +25,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { Scan, Plus, List as ListIcon, CreditCard, Settings, BarChart } from 'lucide-react'; // Use List as ListIcon to avoid conflict
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
+import { StatusBar, Style } from '@capacitor/status-bar'; // Import StatusBar and Style
 
 const navLinks = [
   { href: '/', label: 'Home', icon: ListIcon },
@@ -47,7 +48,13 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Set status bar style based on theme
+    if (theme === 'dark') {
+      StatusBar.setStyle({ style: Style.Light });
+    } else {
+      StatusBar.setStyle({ style: Style.Dark });
+    }
+  }, [theme]); // Rerun effect when theme changes
 
   if (!mounted) return null;
 
@@ -84,7 +91,7 @@ export default function Navbar() {
   );
 
   return (
-    <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
+    <AppBar position="sticky" elevation={1} sx={{ bgcolor: '#000080', borderBottom: 1, borderColor: 'divider', paddingTop: 'env(safe-area-inset-top)' }}>
       <Toolbar>
         {isMobile && (
           <IconButton
@@ -102,7 +109,7 @@ export default function Navbar() {
           sx={{
             flexGrow: 1,
             textDecoration: 'none',
-          
+
             fontWeight: 'bold',
           }}
         >
@@ -131,12 +138,12 @@ export default function Navbar() {
           </Stack>
         )}
 
-                  <IconButton
-                    sx={{ ml: 2, color: muiTheme.palette.text.primary }} // Explicitly set color
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  >
-                    {theme === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-                  </IconButton>
+        <IconButton
+          sx={{ ml: 2, color: muiTheme.palette.text.primary }} // Explicitly set color
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        >
+          {theme === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+        </IconButton>
         <Drawer
           anchor="left"
           open={mobileOpen}
