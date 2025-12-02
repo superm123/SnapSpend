@@ -43,7 +43,7 @@ The project successfully compiles and is ready for use, meeting all specificatio
 *   **Next.js Configuration:**
     *   Modified `next.config.cjs` to include `output: 'export'` for static HTML export.
     *   Commented out `next/image` import and replaced `Image` component with a standard `img` tag in `src/app/scan/page.tsx` to troubleshoot static export issues.
-    *   Attempted to use `distDir: 'out'` but later removed it.
+    *   Attempted to use `distDir: 'out'` but reverted to `out` as `index.html` was missing.
 *   **`out` Directory Issues:** Encountered persistent issues with `next build` failing to create the `out` directory, indicating potential incompatibilities with Next.js App Router static export.
 *   **`capacitor.config.json` Adjustments:**
     *   Changed `webDir` to `.next/static` briefly, but reverted to `out` as `index.html` was missing.
@@ -149,3 +149,13 @@ You can now open the native projects in Android Studio and Xcode to build and ru
     *   **6 Passed Tests:** Confirms that non-Tesseract, non-Firefox E2E tests are now executing successfully.
     *   **6 Skipped Tests:** (For Tesseract-dependent features and remaining CSV download verification). These tests are intentionally skipped based on user instructions to accept Tesseract-related issues as known bugs for now.
 *   **Overall:** The remaining E2E tests are now executing as expected, with non-Tesseract-dependent features passing and Tesseract-dependent features being correctly skipped. The automated E2E test suite is now functional within the defined scope.
+
+## Proposed Features:
+
+### Bank Statement Import from PDF:
+*   **Objective:** Implement a client-side solution for importing bank statements from PDF files, adhering to the "100% offline-first" and "no backend" architectural constraints.
+*   **Approach:**
+    *   Leverage `react-pdf` (or `pdf.js` directly) for client-side text extraction from PDF documents.
+    *   Utilize existing `Tesseract.js` for OCR if a PDF is determined to be a scanned image rather than a text-searchable document.
+    *   Develop robust client-side JavaScript/TypeScript parsing logic to extract structured transaction data (date, description, amount, etc.) from the extracted text.
+    *   Provide a user interface for reviewing and editing the extracted data before saving it to the Dexie.js (IndexedDB) database.
