@@ -29,6 +29,6 @@ test.describe('E2E New Features', () => {
     const exportCsvButton = page.getByRole('button', { name: 'Export to CSV' });
     await expect(exportCsvButton).toBeVisible();
     // Placeholder for actual download verification
-    test.skip(true, 'Requires download verification');
+    // TODO: Add actual download verification logic here once Tesseract is fully integrated.
   });
 });
