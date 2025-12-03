@@ -4,11 +4,14 @@ PODS:
   - CapacitorCamera (7.0.2):
     - Capacitor
   - CapacitorCordova (7.4.4)
+  - CapacitorStatusBar (7.0.3):
+    - Capacitor
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorCamera (from `../../node_modules/@capacitor/camera`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -17,12 +20,15 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/camera"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorStatusBar:
+    :path: "../../node_modules/@capacitor/status-bar"
 
 SPEC CHECKSUMS:
   Capacitor: 09d9ff8e9618e8c4b3cab2bbee34a17215dd2fef
   CapacitorCamera: 6e18d54c8ab30d7dc7b8cd93d96f9b4f57e9202a
   CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
+  CapacitorStatusBar: 7d8fcbd6768db014bd721d75e246590b014928e8
 
-PODFILE CHECKSUM: c6be376320bfcb75186d02acf2face8f585c4ca5
+PODFILE CHECKSUM: c3026353b26a13e270bf1a1cbb3baf8766258e1d
 
 COCOAPODS: 1.16.2
