@@ -41,7 +41,7 @@ test.describe('Receipt Scan E2E Flow', () => {
     await page.goto('/scan');
 
     // Upload dummy receipt image
-    const filePath = 'tests/fixtures/test-receipt.png'; // Ensure this image exists
+    const filePath = 'tests/fixtures/20251127_101212.jpg';
     await page.setInputFiles('input[type="file"]', filePath);
 
     // Click scan button and wait for OCR to process
@@ -75,5 +75,14 @@ test.describe('Receipt Scan E2E Flow', () => {
     await expect(page.locator('text=Edited Item Description')).toBeVisible();
     await expect(page.locator('text=$12.34')).toBeVisible();
     await expect(page.locator('text=Total: $12.34')).toBeVisible();
+  test('should display MUI icons correctly', async ({ page }) => {
+    await page.goto('/scan');
+
+    // Check for CloudUploadIcon (within the dropzone, often identified by its SVG role or aria-label)
+    // We can look for the parent div containing the "Drop image or click to upload" text and the SVG.
+    await expect(page.locator('text="Drop image or click to upload"').locator('xpath=../svg')).toBeVisible();
+
+    // Check for CameraAltIcon (within the "Scan with Camera" button)
+    await expect(page.locator('button:has-text("Scan with Camera")').locator('svg')).toBeVisible();
   });
 });

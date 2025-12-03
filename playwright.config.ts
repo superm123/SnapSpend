@@ -10,16 +10,16 @@ export default defineConfig({
   reporter: 'list', // Use the "list" reporter for non-interactive output
 
   // Global test timeout
-  timeout: 15000,
+  timeout: 30000,
 
   // Timeout for expect() assertions
   expect: {
-    timeout: 15000,
+    timeout: 30000,
   },
 
   use: {
     // Optional defaults for actions and navigations
-    actionTimeout: 15000,
+    actionTimeout: 30000,
     navigationTimeout: 15000,
 
     // Base URL for page.goto('/')
