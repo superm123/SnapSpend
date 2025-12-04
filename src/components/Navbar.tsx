@@ -22,7 +22,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import { Scan, Plus, List as ListIcon, CreditCard, Settings, BarChart } from 'lucide-react'; // Use List as ListIcon to avoid conflict
+import { Scan, Plus, List as ListIcon, CreditCard, Settings, BarChart, FileText } from 'lucide-react'; // Use List as ListIcon to avoid conflict
 import { useState, useEffect } from 'react';
 import { StatusBar, Style } from '@capacitor/status-bar'; // Import StatusBar and Style
 import { Capacitor } from '@capacitor/core';
@@ -32,6 +32,7 @@ const navLinks = [
   { href: '/', label: 'Home', icon: ListIcon },
   { href: '/scan', label: 'Scan', icon: Scan },
   { href: '/add', label: 'Add Expense', icon: Plus },
+  { href: '/import/bank-statement', label: 'Bank Statement', icon: FileText },
   { href: '/categories', label: 'Categories', icon: ListIcon },
   { href: '/payments', label: 'Payment Methods', icon: CreditCard },
   { href: '/settings', label: 'Settings', icon: Settings },
