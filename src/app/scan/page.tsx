@@ -54,15 +54,14 @@ export default function ScanPage() {
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [loadingOcr, setLoadingOcr] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
-  const [placeName, setPlaceName] = useState(''); // New state for place name
-  const [showRawOcr, setShowRawOcr] = useState(false); // State to toggle raw OCR visibility
-  const [newItem, setNewItem] = useState<{ description: string; amount: string }>({ description: '', amount: '' }); // New state for adding manual items
+  const [placeName, setPlaceName] = useState('');
+  const [showRawOcr, setShowRawOcr] = useState(false);
+  const [newItem, setNewItem] = useState<{ description: string; amount: string }>({ description: '', amount: '' });
 
   const categories = useLiveQuery(() => db.categories.toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
-  const allExpenses = useLiveQuery(() => db.expenses.toArray()); // Get all expenses for category suggestion
+  const allExpenses = useLiveQuery(() => db.expenses.toArray());
 
-  // Tesseract Worker
   const [worker, setWorker] = useState<Tesseract.Worker | null>(null);
 
   useEffect(() => {
@@ -177,7 +176,6 @@ export default function ScanPage() {
         if (isNaN(amount) || amount <= 0) continue;
         let suggestedCategoryId: number | undefined;
 
-        // Category suggestion logic
         if (allExpenses) {
           const matchingExpense = allExpenses.find(
             (exp) => exp.description.toLowerCase() === description.toLowerCase()
@@ -191,12 +189,11 @@ export default function ScanPage() {
           id: itemId++,
           description,
           amount,
-          categoryId: suggestedCategoryId, // Assign suggested category
+          categoryId: suggestedCategoryId,
         });
       }
     }
 
-    // Fallback for slips with no line items but a total
     if (extracted.length === 0) {
       const slipTotalRegex = new RegExp(`(?:total|amount.*due|balance):?\\s*([${currencySymbols}]?\\s?\\d{1,3}(?:[,\\s]\\d{3})*(?:\\.\\d{1,2})?)`, 'i');
       for (const line of lines) {
@@ -211,7 +208,7 @@ export default function ScanPage() {
             description: 'Total',
             amount,
           });
-          break; // Stop after finding the first total
+          break;
         }
       }
     }
@@ -241,12 +238,12 @@ export default function ScanPage() {
     setLineItems((prevItems) => [
       ...prevItems,
       {
-        id: Math.max(0, ...prevItems.map(item => item.id)) + 1, // Generate a new unique ID
+        id: Math.max(0, ...prevItems.map(item => item.id)) + 1,
         description: newItem.description,
         amount: amountNum,
       },
     ]);
-    setNewItem({ description: '', amount: '' }); // Clear input fields
+    setNewItem({ description: '', amount: '' });
   };
 
   const saveExpenses = async () => {
@@ -263,7 +260,7 @@ export default function ScanPage() {
       date: new Date(),
       userId: currentUser.id!,
       receiptImage: base64Image || undefined,
-      place: placeName || undefined, // Add place name to the expense
+      place: placeName || undefined,
     }));
 
     try {
@@ -272,7 +269,7 @@ export default function ScanPage() {
       setImage(null);
       setBase64Image(null);
       setLineItems([]);
-      setPlaceName(''); // Clear place name after saving
+      setPlaceName('');
       router.push('/summary');
     } catch (error) {
       console.error('Failed to save expenses:', error);
@@ -295,35 +292,43 @@ export default function ScanPage() {
             fullWidth
             label="Where did you make this purchase?"
             value={placeName}
+            variant="standard"
             onChange={(e) => setPlaceName(e.target.value)}
             sx={{ mb: 2 }}
           />
           <Typography variant="h6" gutterBottom>
             Upload or Scan Receipt
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
             <Button
-              variant="outlined"
+              variant="contained"
               onClick={handleCameraScan}
               startIcon={<CameraAltIcon />}
-              sx={{ flex: 1 }}
+              sx={{ flex: 1, minHeight: '56px' }}
             >
               Scan with Camera
             </Button>
             <Box
               {...getRootProps()}
               sx={{
-                border: '2px dashed grey',
-                borderRadius: 1,
-                p: 2,
+                border: '2px dashed',
+                borderColor: isDragActive ? 'primary.main' : 'grey.400',
+                borderRadius: 2,
+                p: 3,
                 textAlign: 'center',
                 cursor: 'pointer',
-                bgcolor: isDragActive ? 'action.hover' : 'transparent',
+                bgcolor: isDragActive ? 'action.hover' : 'background.paper',
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                minHeight: 100,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  bgcolor: 'action.hover'
+                }
               }}
             >
               <input {...getInputProps()} />
@@ -342,7 +347,17 @@ export default function ScanPage() {
               </IconButton>
             </Box>
           )}
-          <Button onClick={performOcr} disabled={!image || loadingOcr} fullWidth variant="contained" sx={{ mt: 2 }}>
+          <Button
+            onClick={performOcr}
+            disabled={!image || loadingOcr}
+            fullWidth
+            variant="contained"
+            sx={{
+              mt: 2,
+              py: 1.5,
+              fontSize: '1rem'
+            }}
+          >
             {loadingOcr ? `Processing... ${Math.round(ocrProgress * 100)}%` : 'Scan Receipt'}
           </Button>
           {loadingOcr && <LinearProgress variant="determinate" value={ocrProgress * 100} sx={{ mt: 1 }} />}
@@ -364,7 +379,9 @@ export default function ScanPage() {
         {lineItems.length > 0 && (
           <Paper sx={{ p: 2, mb: 4 }}>
             <Typography variant="h6" gutterBottom>Extracted Line Items (Editable)</Typography>
-            <TableContainer>
+
+            {/* Desktop Table View */}
+            <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -386,6 +403,7 @@ export default function ScanPage() {
                             value={item.categoryId?.toString() || ''}
                             onChange={(e: SelectChangeEvent) => handleLineItemChange(item.id, 'categoryId', parseInt(e.target.value))}
                             displayEmpty
+                            variant="standard"
                           >
                             <MenuItem value="" disabled>Select Category</MenuItem>
                             {categories?.map((cat) => <MenuItem key={cat.id} value={cat.id!.toString()}>{cat.name}</MenuItem>)}
@@ -398,6 +416,7 @@ export default function ScanPage() {
                             value={item.paymentMethodId?.toString() || ''}
                             onChange={(e: SelectChangeEvent) => handleLineItemChange(item.id, 'paymentMethodId', parseInt(e.target.value))}
                             displayEmpty
+                            variant="standard"
                           >
                             <MenuItem value="" disabled>Select Method</MenuItem>
                             {paymentMethods?.map((pm) => <MenuItem key={pm.id} value={pm.id!.toString()}>{pm.name}</MenuItem>)}
@@ -405,7 +424,7 @@ export default function ScanPage() {
                         </FormControl>
                       </TableCell>
                       <TableCell>
-                        <IconButton onClick={() => handleRemoveLineItem(item.id)} aria-label="delete">
+                        <IconButton onClick={() => handleRemoveLineItem(item.id)} aria-label="delete" color="error">
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>
@@ -415,28 +434,75 @@ export default function ScanPage() {
               </Table>
             </TableContainer>
 
-            <Box sx={{ mt: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+            {/* Mobile Card View */}
+            <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
+              {lineItems.map((item) => (
+                <Paper key={item.id} elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="subtitle2" color="text.secondary">Item #{item.id + 1}</Typography>
+                    <IconButton onClick={() => handleRemoveLineItem(item.id)} size="small" color="error"><DeleteIcon /></IconButton>
+                  </Box>
+                  <TextField fullWidth label="Description" variant="standard" size="small" value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} sx={{ mb: 2 }} />
+                  <TextField fullWidth label="Amount" variant="standard" type="number" size="small" value={item.amount} onChange={(e) => handleLineItemChange(item.id, 'amount', e.target.value)} sx={{ mb: 2 }} />
+                  <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                    <Select
+                      value={item.categoryId?.toString() || ''}
+                      onChange={(e: SelectChangeEvent) => handleLineItemChange(item.id, 'categoryId', parseInt(e.target.value))}
+                      displayEmpty
+                      variant="standard"
+                    >
+                      <MenuItem value="" disabled>Select Category</MenuItem>
+                      {categories?.map((cat) => <MenuItem key={cat.id} value={cat.id!.toString()}>{cat.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                  <FormControl fullWidth size="small">
+                    <Select
+                      value={item.paymentMethodId?.toString() || ''}
+                      onChange={(e: SelectChangeEvent) => handleLineItemChange(item.id, 'paymentMethodId', parseInt(e.target.value))}
+                      displayEmpty
+                      variant="standard"
+                    >
+                      <MenuItem value="" disabled>Select Method</MenuItem>
+                      {paymentMethods?.map((pm) => <MenuItem key={pm.id} value={pm.id!.toString()}>{pm.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Paper>
+              ))}
+            </Box>
+
+            <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3, alignItems: 'flex-end' }}>
               <TextField
                 label="New Item Description"
-                variant="outlined"
+                variant="standard"
                 value={newItem.description}
                 onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                 sx={{ flexGrow: 1 }}
               />
               <TextField
                 label="Amount"
-                variant="outlined"
+                variant="standard"
                 type="number"
                 value={newItem.amount}
                 onChange={(e) => setNewItem({ ...newItem, amount: e.target.value })}
-                sx={{ width: 120 }}
+                sx={{ width: { xs: '100%', sm: 150 } }}
               />
-              <Button onClick={handleAddNewItem} variant="contained" sx={{ height: 56 }}>
+              <Button onClick={handleAddNewItem} variant="contained" sx={{ height: { xs: '48px', sm: '36px' }, minWidth: 120 }}>
                 Add Item
               </Button>
             </Box>
 
-            <Button onClick={saveExpenses} fullWidth variant="contained" sx={{ mt: 2 }}>
+            <Button
+              onClick={saveExpenses}
+              fullWidth
+              variant="contained"
+              size="large"
+              sx={{
+                mt: 4,
+                py: 1.5,
+                fontSize: '1.1rem',
+                fontWeight: 'bold'
+              }}
+            >
               Save Expenses
             </Button>
           </Paper>

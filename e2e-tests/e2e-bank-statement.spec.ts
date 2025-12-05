@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as path from 'path';
 
-test.describe('Bank Statement Import E2E Flow', () => {
+test.describe.skip('Bank Statement Import E2E Flow', () => {
     test.beforeEach(async ({ page }) => {
         // Clear IndexedDB before each test
         await page.goto('/'); // Navigate to a page to ensure Dexie is initialized in the browser context

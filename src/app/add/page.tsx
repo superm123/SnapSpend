@@ -100,6 +100,8 @@ export default function AddExpensePage() {
               multiline
               rows={3}
               fullWidth
+              variant="standard"
+              sx={{ mb: 3 }}
             />
             <TextField
               id="amount"
@@ -111,6 +113,8 @@ export default function AddExpensePage() {
               required
               inputProps={{ step: "0.01", min: "0" }}
               fullWidth
+              variant="standard"
+              sx={{ mb: 3 }}
             />
             <FormControl fullWidth>
               <InputLabel id="category-label">Category</InputLabel>
@@ -119,6 +123,7 @@ export default function AddExpensePage() {
                 id="category"
                 value={selectedCategory}
                 label="Category"
+                variant="standard"
                 onChange={(e: SelectChangeEvent) => setSelectedCategory(e.target.value as string)}
                 required
               >
@@ -136,6 +141,7 @@ export default function AddExpensePage() {
                 id="paymentMethod"
                 value={selectedPaymentMethod}
                 label="Payment Method"
+                variant="standard"
                 onChange={(e: SelectChangeEvent) => setSelectedPaymentMethod(e.target.value as string)}
                 required
               >
@@ -153,6 +159,7 @@ export default function AddExpensePage() {
                 id="addedBy"
                 value={selectedUser}
                 label="Added By"
+                variant="standard"
                 onChange={(e: SelectChangeEvent) => setSelectedUser(e.target.value as string)}
                 required
               >
@@ -167,6 +174,7 @@ export default function AddExpensePage() {
               label="Date"
               value={date}
               onChange={(newDate) => setDate(newDate)}
+              slotProps={{ textField: { variant: 'standard', fullWidth: true, sx: { mb: 3 } } }}
               sx={{ width: '100%' }}
             />
             <Button type="submit" variant="contained" size="large" fullWidth>
