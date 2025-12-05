@@ -23,7 +23,7 @@ export default defineConfig({
     navigationTimeout: 15000,
 
     // Base URL for page.goto('/')
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:4000',
 
     // Collect traces upon failing the first time
     trace: 'on',

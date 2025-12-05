@@ -45,7 +45,6 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [statusBarHeight, setStatusBarHeight] = useState(0); // State to store status bar height
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
 
@@ -61,8 +60,6 @@ export default function Navbar() {
       // Prevent the status bar from overlaying the WebView
       StatusBar.setOverlaysWebView({ overlay: false });
     }
-    // Get status bar height for native platforms
-
   }, [theme]); // Rerun effect when theme changes
 
   if (!mounted) return null;
@@ -107,7 +104,7 @@ export default function Navbar() {
         bgcolor: '#000080',
         borderBottom: 1,
         borderColor: 'divider',
-        paddingTop: `${statusBarHeight}px`, // Dynamically set paddingTop
+        // paddingTop removed as overlay is false
       }}
     >
       <Toolbar>

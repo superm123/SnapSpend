@@ -1,0 +1,91 @@
+{
+    "20251127_101212.jpg": {
+        "status": "UNREADABLE",
+        "notes": "OCR unable to extract useful data - poor image quality or low contrast"
+    },
+    "20251127_123443.jpg": {
+        "status": "UNREADABLE",
+        "notes": "OCR unable to extract useful data"
+    },
+    "20251127_123555.jpg": {
+        "status": "UNREADABLE",
+        "notes": "OCR unable to extract useful data"
+    },
+    "20251127_211041.jpg": {
+        "status": "UNREADABLE",
+        "notes": "OCR unable to extract useful data"
+    },
+    "20251127_211148.jpg": {
+        "status": "UNREADABLE",
+        "notes": "OCR unable to extract useful data"
+    },
+    "20251127_211308.jpg": {
+        "status": "READABLE",
+        "description": "WOOLWORTHS grocery receipt",
+        "expectedPlace": "WOOLWORTHS",
+        "rawOcrText": "[User should paste raw OCR text here after scanning]",
+        "expectedItems": [
+            {
+                "description": "WW CAKE FLOUR",
+                "amount": "19.99"
+            },
+            {
+                "description": "WW WHITE SUGAR",
+                "amount": "24.99"
+            },
+            {
+                "description": "WW BROWN SUGAR",
+                "amount": "24.99"
+            },
+            {
+                "description": "WW PORK SAUSAGE",
+                "amount": "49.99"
+            },
+            {
+                "description": "WW CHEESE SLICES",
+                "amount": "34.99"
+            }
+        ],
+        "expectedTotal": "154.95",
+        "notes": "Clear WOOLWORTHS receipt with visible line items and prices in Rand (R)"
+    },
+    "20251127_211849.jpg": {
+        "status": "READABLE",
+        "description": "CHECKERS slip",
+        "expectedPlace": "CHECKERS",
+        "rawOcrText": "[User should paste raw OCR text here after scanning]",
+        "expectedItems": [
+            {
+                "description": "[To be filled after OCR scan]",
+                "amount": "[amount]"
+            }
+        ],
+        "expectedTotal": "[total from receipt]",
+        "notes": "CHECKERS receipt - should be readable"
+    },
+    "20251205_112925.jpg": {
+        "status": "READABLE",
+        "description": "DIS-CHEM sticker/receipt",
+        "expectedPlace": "DIS-CHEM",
+        "rawOcrText": "[User should paste raw OCR text here after scanning]",
+        "expectedItems": [
+            {
+                "description": "[Product name from sticker]",
+                "amount": "[price]"
+            }
+        ],
+        "expectedTotal": "[price from sticker]",
+        "notes": "Dis-Chem price sticker - may extract price and product info"
+    },
+    "_metadata": {
+        "version": "1.0",
+        "purpose": "Expected OCR extraction results for receipt test fixtures",
+        "instructions": "After scanning each receipt, paste the raw OCR text into the 'rawOcrText' field and verify if the extracted items match expectations",
+        "readableReceipts": [
+            "20251127_211308.jpg",
+            "20251127_211849.jpg",
+            "20251205_112925.jpg"
+        ],
+        "notes": "Three receipts are readable: WOOLWORTHS (211308), CHECKERS (211849), and DIS-CHEM sticker (112925). Focus testing on these."
+    }
+}

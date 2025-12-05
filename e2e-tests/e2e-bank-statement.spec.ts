@@ -26,16 +26,17 @@ test.describe('Bank Statement Import E2E Flow', () => {
                 { id: 2, name: 'Another User' },
             ]);
             // Seed settings for billing cycle
-            await db.settings.add({ id: 1, billingCycleStartDay: 1 });
+            await db.settings.add({ id: 1, billingCycleStart: 1, currency: 'USD' });
         });
 
         // Set current user in Zustand store
         await page.evaluate(async () => {
-            const { useAppStore } = await import('../src/lib/store'); // Import Zustand store
-            useAppStore.setState({ currentUser: { id: 1, name: 'Test User' } });
+            const { useStore } = await import('../src/lib/store'); // Import Zustand store
+            useStore.setState({ currentUser: { id: 1, name: 'Test User' } });
         });
 
         await page.goto('/import/bank-statement');
+        page.on('console', msg => console.log(`BROWSER LOG: ${msg.text()}`));
     });
 
     test('should allow user to upload a PDF and display parsed transactions', async ({ page }) => {
@@ -58,7 +59,7 @@ test.describe('Bank Statement Import E2E Flow', () => {
 
         // Verify at least one transaction row exists (basic check)
         const tableRows = page.locator('table tbody tr');
-        await expect(tableRows).toHaveCount(expect.any(Number)); // Check if there's at least one row + header
+        expect(await tableRows.count()).toBeGreaterThan(0); // Check if there's at least one row + header
         await expect(tableRows.first()).toBeVisible();
 
         // Optionally, interact with the first transaction to ensure it's editable
@@ -66,7 +67,7 @@ test.describe('Bank Statement Import E2E Flow', () => {
         await expect(firstRow.locator('input[value*="2025"]')).toBeVisible(); // Check for a date
         await expect(firstRow.locator('input[value*="Description"]')).toBeVisible(); // Check for description input
         await expect(firstRow.locator('input[value*="123.45"]')).toBeVisible(); // Check for amount input
-        
+
         // Ensure "Import All Transactions" button is visible
         await expect(page.getByRole('button', { name: 'Import All Transactions' })).toBeVisible();
     });
@@ -94,7 +95,7 @@ test.describe('Bank Statement Import E2E Flow', () => {
         // For Category
         await firstRow.locator('button[aria-label="Category"]').click();
         await page.getByRole('option', { name: 'Groceries' }).click();
-        
+
         // For Payment Method
         await firstRow.locator('button[aria-label="Payment Method"]').click();
         await page.getByRole('option', { name: 'Credit Card' }).click();

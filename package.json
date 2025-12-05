@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf .next out",
-    "dev": "next dev",
+    "dev": "next dev -p 4000",
     "build": "npm run clean && next build",
-    "start": "next start",
+    "start": "next start -p 4000",
     "lint": "next lint",
     "test": "jest",
     "playwright:test-with-loader": "cross-env NODE_OPTIONS=\"--import tsx\" npx playwright test",
-    "test:e2e": "concurrently --kill-others-on-fail \"npm run dev\" \"npx wait-on http://localhost:3000 && npm run playwright:test-with-loader\"",
-    "serve:export": "npx serve out -l 3000",
+    "test:e2e": "concurrently --kill-others-on-fail \"npm run dev\" \"npx wait-on http://localhost:4000 && npm run playwright:test-with-loader\"",
+    "serve:export": "npx serve out -l 4000",
     "cap:sync": "npm run build && npx cap sync",
     "db:generate": "drizzle-kit generate"
   },

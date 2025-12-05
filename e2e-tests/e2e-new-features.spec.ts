@@ -2,11 +2,11 @@ import { test, expect } from '@playwright/test';
 
 test.describe('E2E New Features', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:4000');
   });
 
   test('should verify presence of "Scan with Camera" button', async ({ page }) => {
-    await page.goto('http://localhost:3000/scan');
+    await page.goto('http://localhost:4000/scan');
     const scanWithCameraButton = page.getByRole('button', { name: 'Scan with Camera' });
     await expect(scanWithCameraButton).toBeVisible();
   });
@@ -19,13 +19,13 @@ test.describe('E2E New Features', () => {
   });
 
   test('should verify date filtering on History page', async ({ page }) => {
-    await page.goto('http://localhost:3000/history');
+    await page.goto('http://localhost:4000/history');
     // Placeholder for date filtering logic
     await expect(page.getByText('Expense History')).toBeVisible();
   });
 
   test('should verify CSV export functionality', async ({ page }) => {
-    await page.goto('http://localhost:3000/history');
+    await page.goto('http://localhost:4000/history');
     const exportCsvButton = page.getByRole('button', { name: 'Export to CSV' });
     await expect(exportCsvButton).toBeVisible();
     // Placeholder for actual download verification

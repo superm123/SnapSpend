@@ -136,22 +136,45 @@ export default function ScanPage() {
     }
   };
 
-  const extractLineItems = async (text: string) => { // Make async to await db queries
+  const extractMerchantName = (text: string): string => {
+    const lines = text.split('\n').filter(l => l.trim()).map(l => l.trim());
+    for (let i = 0; i < Math.min(5, lines.length); i++) {
+      const line = lines[i];
+      if (
+        line.length > 3 &&
+        line.length < 50 &&
+        !/^(receipt|invoice|tax|vat|date|time|till|cashier|server|table|\d)/i.test(line) &&
+        !/^\d{1,2}\/\d{1,2}\/\d{2,4}/.test(line)
+      ) {
+        return line;
+      }
+    }
+    return '';
+  };
+
+  const extractLineItems = async (text: string) => {
     const lines = text.split('\n').filter(line => line.trim() !== '');
     const extracted: LineItem[] = [];
     let itemId = 0;
 
-    // Create a regex that matches any of the currency symbols
-    const currencySymbols = Object.values(currencySymbolMap).join('');
-    const itemRegex = new RegExp(`(.*?)\\s+([${currencySymbols}]?\\s?\\d+\\.\\d{2})`, 'i');
-    const totalRegex = /Total|Balance Due|Amount Due/i;
+    const merchantName = extractMerchantName(text);
+    if (merchantName && !placeName) {
+      setPlaceName(merchantName);
+    }
 
-    for (const line of lines) { // Use for...of for async/await
+    const currencySymbols = Object.values(currencySymbolMap).join('');
+    const itemRegex = new RegExp(`(.+?)\\s+([${currencySymbols}]?\\s?\\d{1,3}(?:[,\\s]\\d{3})*(?:\\.\\d{1,2})?)\\s*$`, 'i');
+    const totalRegex = /(?:^|\s)(sub)?total|balance.*due|amount.*due|grand.*total/i;
+
+    for (const line of lines) {
       if (totalRegex.test(line)) continue;
       const match = line.match(itemRegex);
       if (match) {
         const description = match[1].trim();
-        const amount = parseFloat(match[2].replace(/[^0-9.]/g, ''));
+        const amountStr = match[2].replace(/[^0-9.,]/g, '');
+        const cleanAmount = amountStr.replace(/[\s,]/g, '');
+        const amount = parseFloat(cleanAmount);
+        if (isNaN(amount) || amount <= 0) continue;
         let suggestedCategoryId: number | undefined;
 
         // Category suggestion logic
@@ -175,11 +198,14 @@ export default function ScanPage() {
 
     // Fallback for slips with no line items but a total
     if (extracted.length === 0) {
-      const slipTotalRegex = new RegExp(`(?:Total|Amount Due|Balance):?\\s*([${currencySymbols}]?\\s?\\d+\\.\\d{2})`, 'i');
+      const slipTotalRegex = new RegExp(`(?:total|amount.*due|balance):?\\s*([${currencySymbols}]?\\s?\\d{1,3}(?:[,\\s]\\d{3})*(?:\\.\\d{1,2})?)`, 'i');
       for (const line of lines) {
         const match = line.match(slipTotalRegex);
         if (match) {
-          const amount = parseFloat(match[1].replace(/[^0-9.]/g, ''));
+          const amountStr = match[1].replace(/[^0-9.,]/g, '');
+          const cleanAmount = amountStr.replace(/[\s,]/g, '');
+          const amount = parseFloat(cleanAmount);
+          if (isNaN(amount) || amount <= 0) continue;
           extracted.push({
             id: itemId++,
             description: 'Total',
@@ -225,8 +251,8 @@ export default function ScanPage() {
 
   const saveExpenses = async () => {
     if (lineItems.length === 0 || !currentUser?.id) {
-        alert(!currentUser?.id ? 'Please select a user in settings.' : 'No line items to save.');
-        return;
+      alert(!currentUser?.id ? 'Please select a user in settings.' : 'No line items to save.');
+      return;
     }
 
     const newExpenses: IExpense[] = lineItems.map((item) => ({
@@ -277,16 +303,16 @@ export default function ScanPage() {
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <Button
-                variant="outlined"
-                onClick={handleCameraScan}
-                startIcon={<CameraAltIcon />}
-                sx={{ flex: 1 }}
+              variant="outlined"
+              onClick={handleCameraScan}
+              startIcon={<CameraAltIcon />}
+              sx={{ flex: 1 }}
             >
-                Scan with Camera
+              Scan with Camera
             </Button>
             <Box
-                {...getRootProps()}
-                sx={{
+              {...getRootProps()}
+              sx={{
                 border: '2px dashed grey',
                 borderRadius: 1,
                 p: 2,
@@ -298,11 +324,11 @@ export default function ScanPage() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center'
-                }}
+              }}
             >
-                <input {...getInputProps()} />
-                <Typography variant="body2">Drop image or click to upload</Typography>
-                <CloudUploadIcon sx={{ mt: '8px', color: 'grey' }} />
+              <input {...getInputProps()} />
+              <Typography variant="body2">Drop image or click to upload</Typography>
+              <CloudUploadIcon sx={{ mt: '8px', color: 'grey' }} />
             </Box>
           </Box>
           {image && (
@@ -373,7 +399,7 @@ export default function ScanPage() {
                             onChange={(e: SelectChangeEvent) => handleLineItemChange(item.id, 'paymentMethodId', parseInt(e.target.value))}
                             displayEmpty
                           >
-                             <MenuItem value="" disabled>Select Method</MenuItem>
+                            <MenuItem value="" disabled>Select Method</MenuItem>
                             {paymentMethods?.map((pm) => <MenuItem key={pm.id} value={pm.id!.toString()}>{pm.name}</MenuItem>)}
                           </Select>
                         </FormControl>
