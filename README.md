@@ -1,37 +1,85 @@
-Build a complete, production-ready, 100% offline-first Next.js 14+ (App Router) expense tracker called "SnapSend".
-App ID: za.snapsend
-MANDATORY TECH STACK:- Next.js 14+ App Router + TypeScript- Tailwind CSS + MUI + Lucide icons- Recharts (pie + bar)- Tesseract.js (client-side OCR)- Dexie.js (IndexedDB)- Zustand- date-fns + uuid
-EXACT REQUIRED FEATURES (implement ALL):1. Receipt scanner page (/scan)   
-- Drag-drop or file picker   
-- Tesseract.js OCR → auto extract line items (description + amount) using regex   - Editable table (edit desc/amount/category inline)   - Save receipt image as base
- - NEW FEATURE - group lite items in bills record name of place as well
- - NEW FEATURE -figure out the category based on previous use
-2. Manual add expense page (/add)
-2.5. Bank Statement Import (PDF)
-    - Client-side PDF processing using `react-pdf` to extract text content.
-    - If PDF contains scanned images, leverage existing `Tesseract.js` for OCR.
-    - Implement client-side logic to parse extracted text into structured transaction data (date, description, amount, etc.).
-    - Present extracted data for user review/editing.
-    - Save structured transaction data to Dexie.js.
-3. Categories & Payment Methods pages (full CRUD)   - Pre-seeded: Fuel, Groceries, Medical, Other   - Payments: Cash, Visa, Mastercard
-4. Multi-user (family mode)   - Settings → add/remove users (name only)   - Every expense has "addedBy"
-5. Custom billing cycle (default 20th → 19th next month)   - Settings → change start day (1–31)   - All summaries respect current cycle
-6. Dashboard (/summary)   - Big total for current cycle   - Pie chart: category breakdown   - Bar chart: payment method breakdown
-7. 100% offline with Dexie.js (IndexedDB)   - Tables: expenses, categories, paymentMethods, users, settings
-8. Full test suite - Jest + RTL unit & component tests - Cypress E2E test for: scan → edit → save → appears in summary
-9. Add more categories that make sense
-Exact folder structure:src/app/(routes)/(scan|add|summary|categories|payments|settings)/page.tsxsrc/components/ui → shadcnsrc/lib/db.ts (Dexie)src/lib/store.ts (Zustand)src/lib/utils/customMonth.ts
-Mobile-first, dark mode, clean UI, no auth, no backend.
-Output the ENTIRE working project (all files + code) in one response.Include working Tesseract OCR with realistic regex parsing.Include seed data on first load.No extra features. No questions. No explanations.
-Generate the full SnapSpend app now.
-Include IOS and Android Build plans
+# SnapSpend
 
-Record Progress in PROGRESS.md dont overwrite whats already there.
+SnapSpend is a complete, production-ready, 100% offline-first expense tracker built with Next.js 14+ (App Router). It is designed to be fast, private, and capable of handling receipt scanning with client-side OCR.
 
-DOnt consider project done if it compiles it needs to be 100% functional
+## Features
 
-When running test use the PW_TEST_HTML_REPORT_OPEN = "never" variable to avoid getting stuck
- $env:PW_TEST_HTML_REPORT_OPEN = "never"
->>
->> # Run Playwright tests
->> npx playwright test
+-   **100% Offline-First**: All data is stored locally using Dexie.js (IndexedDB). No internet connection required.
+-   **Receipt Scanning**: Drag & drop or upload receipts for automatic line item extraction using Tesseract.js (Client-side OCR).
+-   **Manual Entry**: Quick and easy form for adding expenses manually.
+-   **Dashboard & Analytics**: Visualize your spending with pie charts (Category breakdown) and bar charts (Payment method breakdown).
+-   **Categories & Payment Methods**: Fully customizable categories and payment methods.
+-   **Multi-User**: Support for "Family Mode" to track expenses by different users.
+-   **Custom Billing Cycle**: configure your preferred billing cycle start day.
+-   **Dark Mode**: Sleek, mobile-first UI with dark mode support.
+-   **Bank Statement Import**: (Experimental) Client-side parsing of PDF bank statements.
+-   **Cross-Platform**: Ready for deployment as a PWA, or wrapped for Android and iOS using Capacitor.
+
+## Tech Stack
+
+-   **Framework**: Next.js 14+ (App Router), TypeScript
+-   **Styling**: Tailwind CSS, Shadcn UI, Lucide Icons, Recharts
+-   **State Management**: Zustand
+-   **Database**: Dexie.js (IndexedDB)
+-   **Utilities**: date-fns, uuid, Tesseract.js (OCR), react-pdf
+-   **Testing**: Jest (Unit), Playwright (E2E)
+
+## Getting Started
+
+### Prerequisites
+
+-   Node.js 18+ installed
+-   npm or yarn
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository_url>
+    cd budget_planner
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+### Running the App
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Scripts
+
+-   `npm run dev`: Runs the development server.
+-   `npm run build`: Builds the application for production.
+-   `npm run start`: Starts the production server.
+-   `npm run test`: Runs unit tests using Jest.
+-   `npm run test:e2e`: Runs end-to-end tests using Playwright.
+-   `npm run cap:sync`: Syncs the web build with Capacitor for Android/iOS.
+
+## Mobile Build (Android/iOS)
+
+This project is configured with Capacitor.
+
+1.  Build the web project:
+    ```bash
+    npm run build
+    ```
+
+2.  Sync with native platforms:
+    ```bash
+    npx cap sync
+    ```
+
+3.  Open in Android Studio or Xcode:
+    ```bash
+    npx cap open android
+    # or
+    npx cap open ios
+    ```

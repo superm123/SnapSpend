@@ -30,7 +30,10 @@ import {
   LinearProgress,
   SelectChangeEvent,
 } from '@mui/material';
-import { Upload, XCircle, Camera as CameraIcon, Trash2 } from 'lucide-react';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { createWorker } from 'tesseract.js';
 
 interface LineItem {
@@ -276,7 +279,7 @@ export default function ScanPage() {
             <Button
                 variant="outlined"
                 onClick={handleCameraScan}
-                startIcon={<CameraIcon />}
+                startIcon={<CameraAltIcon />}
                 sx={{ flex: 1 }}
             >
                 Scan with Camera
@@ -299,7 +302,7 @@ export default function ScanPage() {
             >
                 <input {...getInputProps()} />
                 <Typography variant="body2">Drop image or click to upload</Typography>
-                <Upload size={24} style={{ marginTop: '8px', color: 'grey' }} />
+                <CloudUploadIcon sx={{ mt: '8px', color: 'grey' }} />
             </Box>
           </Box>
           {image && (
@@ -309,7 +312,7 @@ export default function ScanPage() {
                 sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(255, 255, 255, 0.7)' }}
                 onClick={() => { setImage(null); setBase64Image(null); setLineItems([]); }}
               >
-                <XCircle />
+                <CancelRoundedIcon />
               </IconButton>
             </Box>
           )}
@@ -377,7 +380,7 @@ export default function ScanPage() {
                       </TableCell>
                       <TableCell>
                         <IconButton onClick={() => handleRemoveLineItem(item.id)} aria-label="delete">
-                          <Trash2 />
+                          <DeleteIcon />
                         </IconButton>
                       </TableCell>
                     </TableRow>
