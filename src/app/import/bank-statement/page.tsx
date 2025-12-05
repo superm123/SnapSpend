@@ -20,7 +20,10 @@ import {
     FormControl,
     InputLabel,
     SelectChangeEvent,
+    IconButton,
+    Tooltip,
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { useTheme } from 'next-themes';
 import { db, ICategory, IPaymentMethod, IExpense, IUser } from '@/lib/db'; // Import db and interfaces
@@ -103,7 +106,7 @@ const BankStatementImportPage = () => {
     // Set up the worker source for pdf.js-dist on client-side
     useEffect(() => {
         pdfjsLibPromise.then(pdfjsLib => {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
         });
     }, []);
 
@@ -164,6 +167,10 @@ const BankStatementImportPage = () => {
         );
     };
 
+    const handleDeleteTransaction = (id: string) => {
+        setParsedTransactions(prevTransactions => prevTransactions.filter(t => t.id !== id));
+    };
+
     const handleImportAll = async () => {
         if (!currentUser?.id) {
             setImportStatus('error');
@@ -195,7 +202,7 @@ const BankStatementImportPage = () => {
                     parsedDate = parse(transaction.date, 'dd MMM yyyy', new Date());
                 }
                 if (isNaN(parsedDate.getTime())) {
-                     throw new Error('Invalid date format');
+                    throw new Error('Invalid date format');
                 }
             } catch (e) {
                 setImportStatus('error');
@@ -285,6 +292,7 @@ const BankStatementImportPage = () => {
                                             <TableCell>Type</TableCell>
                                             <TableCell>Category</TableCell>
                                             <TableCell>Payment Method</TableCell>
+                                            <TableCell>Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -360,6 +368,13 @@ const BankStatementImportPage = () => {
                                                             ))}
                                                         </Select>
                                                     </FormControl>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Tooltip title="Remove Transaction">
+                                                        <IconButton onClick={() => handleDeleteTransaction(transaction.id)} color="error">
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    </Tooltip>
                                                 </TableCell>
                                             </TableRow>
                                         ))}

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Receipt Scan E2E Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
-      globalThis.TransformStream = globalThis.TransformStream || class TransformStream {};
+      globalThis.TransformStream = globalThis.TransformStream || class TransformStream { };
     });
     // Clear IndexedDB before each test
     await page.goto('/'); // Navigate to a page to ensure Dexie is initialized in the browser context
@@ -75,6 +75,8 @@ test.describe('Receipt Scan E2E Flow', () => {
     await expect(page.locator('text=Edited Item Description')).toBeVisible();
     await expect(page.locator('text=$12.34')).toBeVisible();
     await expect(page.locator('text=Total: $12.34')).toBeVisible();
+  });
+
   test('should display MUI icons correctly', async ({ page }) => {
     await page.goto('/scan');
 

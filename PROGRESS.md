@@ -160,4 +160,19 @@ You can now open the native projects in Android Studio and Xcode to build and ru
     *   Develop robust client-side JavaScript/TypeScript parsing logic to extract structured transaction data (date, description, amount, etc.) from the extracted text.
     *   Provide a user interface for reviewing and editing the extracted data before saving it to the Dexie.js (IndexedDB) database.
 
-DELETED FUNCTION ABOVE AS NOT IDEAL FOR SCENARIO> PLEASE FOLLOW RULES WHEN IMPLEMENTING
+## Latest Fixes (Session 1)
+
+### Documentation
+-   Rewrote **README.md** to provide standard, user-friendly documentation (Overview, Features, Tech Stack, Getting Started).
+
+### Issue Resolution
+-   **E2E Tests**: Fixed a syntax error in `tests/receipt-scan.spec.ts` that was preventing tests from running.
+-   **Routing**: Resolved a Next.js routing conflict between `src/app/(routes)/import/bank-statement` and `src/app/import/bank-statement`. Removed the duplicate `(routes)` version.
+-   **Build System**: Fixed the production build (`npm run build`) by:
+    -   Excluding `tests/` from `tsconfig.json` to prevent TypeScript errors in test files from blocking the build.
+    -   Host `pdf.worker.min.js` locally in `public/` folder to support offline mode and fix worker loading issues.
+
+### UX Improvements
+-   **Bank Statement Import**: Added individual "Delete" buttons to transaction rows to allow users to remove unwanted lines (e.g., garbage text or totals) before importing.
+-   **Mobile Compatibility**: Fixed `viewport` metadata configuration in `layout.tsx` for correct rendering on mobile devices (Next.js 14 compatibility).
+-   **iOS Deployment**: Implemented a `clean` build step (`rimraf .next out`) in `package.json` to prevent stale caching issues during Capacitor sync.
