@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, IExpense } from '@/lib/db';
@@ -20,10 +20,11 @@ import {
   Button,
   Chip,
   Stack,
+  CircularProgress,
 } from '@mui/material';
 import { subDays } from 'date-fns';
 
-export default function HistoryPage() {
+function HistoryContent() {
   const searchParams = useSearchParams();
   const { currentUser } = useStore();
   const [startDate, setStartDate] = useState(subDays(new Date(), 30));
@@ -201,5 +202,18 @@ export default function HistoryPage() {
         </TableContainer>
       </Box>
     </Container>
+  );
+}
+
+export default function HistoryPage() {
+  return (
+    <Suspense fallback={
+      <Container maxWidth="lg" sx={{ textAlign: 'center', my: 4 }}>
+        <CircularProgress />
+        <Typography>Loading history...</Typography>
+      </Container>
+    }>
+      <HistoryContent />
+    </Suspense>
   );
 }
