@@ -50,6 +50,7 @@
     "next": "^16.0.5",
     "next-themes": "^0.4.6",
     "pdfjs-dist": "^5.4.449",
+    "puppeteer": "^24.32.0",
     "react": "^18.3.1",
     "react-day-picker": "^9.11.2",
     "react-dom": "^18.3.1",
@@ -58,7 +59,6 @@
     "scribe.js-ocr": "^0.9.3",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
-    "tesseract.js": "^6.0.1",
     "uuid": "^13.0.0",
     "web-streams-polyfill": "^4.2.0",
     "zustand": "^5.0.8"

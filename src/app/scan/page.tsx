@@ -7,7 +7,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, IExpense } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
-import Image from 'next/image';
+// The native browser Image constructor is used for OCR preprocessing; Next.js Image is imported as NextImage.
+import NextImage from 'next/image';
 import { Camera, CameraResultType } from '@capacitor/camera';
 import {
   Button,
@@ -36,14 +37,13 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { createWorker } from 'tesseract.js';
+
 
 interface LineItem {
   id: number;
   description: string;
   amount: number;
   categoryId?: number;
-  paymentMethodId?: number;
 }
 
 export default function ScanPage() {
@@ -59,6 +59,7 @@ export default function ScanPage() {
   const [placeName, setPlaceName] = useState('');
   const [showRawOcr, setShowRawOcr] = useState(false);
   const [newItem, setNewItem] = useState<{ description: string; amount: string }>({ description: '', amount: '' });
+  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState<number | ''>('');
 
   // Snackbar State
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -69,24 +70,7 @@ export default function ScanPage() {
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
   const allExpenses = useLiveQuery(() => db.expenses.toArray());
 
-  const [worker, setWorker] = useState<Tesseract.Worker | null>(null);
 
-  useEffect(() => {
-    const initializeWorker = async () => {
-      const workerInstance = await createWorker('eng', 1, {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(m.progress);
-          }
-        },
-      });
-      setWorker(workerInstance);
-    };
-    initializeWorker();
-    return () => {
-      worker?.terminate();
-    };
-  }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -138,13 +122,62 @@ export default function ScanPage() {
   };
 
   const performOcr = async () => {
-    if (!worker || !image) return;
+    if (!image) return;
 
     setLoadingOcr(true);
     setOcrProgress(0);
 
+    // Helper to convert a data URL to a Blob
+    const dataURLtoBlob = (dataurl: string): Blob => {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)?.[1] ?? 'image/png';
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    };
+
     try {
-      const { data: { text } } = await worker.recognize(image);
+      // Load Scribe from public directory to bypass build issues
+      // @ts-ignore
+      const ScribeModule = await import(/* webpackIgnore: true */ '/scribe/scribe.js');
+      const Scribe = ScribeModule.default;
+      // Initialize Scribe (load language data, workers)
+      await Scribe.init();
+
+      // Initialize Scribe with optimized parameters for speed
+      await Scribe.init({ ocrParams: { workerCount: 2, lang: 'eng' } });
+
+      // Convert the base64 image to a Blob for Scribe OCR
+      const imageBlob = dataURLtoBlob(image as string);
+
+      // Preprocess: downscale image to improve speed and accuracy
+      const preprocess = async (blob: Blob): Promise<Blob> => {
+        const img = await new Promise<HTMLImageElement>((res, rej) => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.onerror = (e) => rej(e);
+          i.src = URL.createObjectURL(blob);
+        });
+        const maxWidth = 1024;
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        return await new Promise<Blob>((res) => canvas.toBlob((b) => res(b as Blob), 'image/jpeg', 0.8));
+      };
+
+      const processedBlob = await preprocess(imageBlob);
+      const imageFile = new File([processedBlob], 'capture.jpg', { type: processedBlob.type });
+
+      // Use extractText which robustly handles File objects
+      const text = await Scribe.extractText([imageFile]);
+
       setOcrResult(text);
       extractLineItems(text);
     } catch (error) {
@@ -182,7 +215,10 @@ export default function ScanPage() {
     }
 
     const currencySymbols = Object.values(currencySymbolMap).join('');
-    const itemRegex = new RegExp(`(.+?)\\s+([${currencySymbols}]?\\s?\\d{1,3}(?:[,\\s]\\d{3})*(?:\\.\\d{1,2})?)\\s*$`, 'i');
+    // Updated regex to handle suffixes (e.g. 'A') and trailing chars (e.g. '_')
+    // Captures: 1=Description, 2=Amount (clean number part)
+    // Matches standard amounts like R7.99 or 7.99, optionally followed by single char and then garbage
+    const itemRegex = new RegExp(`(.+?)\\s+([${currencySymbols}]?\\s?\\d{1,3}(?:[,\\s]\\d{3})*(?:\\.\\d{1,2})?)[A-Z]?\\s*.*$`, 'i');
     const totalRegex = /(?:^|\s)(sub)?total|balance.*due|amount.*due|grand.*total/i;
 
     for (const line of lines) {
@@ -194,16 +230,9 @@ export default function ScanPage() {
         const cleanAmount = amountStr.replace(/[\s,]/g, '');
         const amount = parseFloat(cleanAmount);
         if (isNaN(amount) || amount <= 0) continue;
-        let suggestedCategoryId: number | undefined;
-
-        if (allExpenses) {
-          const matchingExpense = allExpenses.find(
-            (exp) => exp.description.toLowerCase() === description.toLowerCase()
-          );
-          if (matchingExpense) {
-            suggestedCategoryId = matchingExpense.categoryId;
-          }
-        }
+        // Default category to 'Other'
+        const otherCategory = categories?.find(c => c.name === 'Other');
+        const suggestedCategoryId = otherCategory?.id || categories?.[0]?.id;
 
         extracted.push({
           id: itemId++,
@@ -276,7 +305,7 @@ export default function ScanPage() {
       description: item.description,
       amount: Number(item.amount),
       categoryId: item.categoryId || categories?.[0]?.id || 0,
-      paymentMethodId: item.paymentMethodId || paymentMethods?.[0]?.id || 0,
+      paymentMethodId: Number(defaultPaymentMethodId) || paymentMethods?.[0]?.id || 0,
       date: new Date(),
       userId: currentUser.id!,
       receiptImage: base64Image || undefined,
@@ -361,7 +390,7 @@ export default function ScanPage() {
           </Box>
           {image && (
             <Box sx={{ mt: 2, position: 'relative', width: '100%', height: 256 }}>
-              <Image src={image} alt="Receipt Preview" layout="fill" objectFit="contain" />
+              <NextImage src={image} alt="Receipt Preview" layout="fill" objectFit="contain" />
               <IconButton
                 sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(255, 255, 255, 0.7)' }}
                 onClick={() => { setImage(null); setBase64Image(null); setLineItems([]); }}
@@ -403,6 +432,22 @@ export default function ScanPage() {
           <Paper sx={{ p: 2, mb: 4 }}>
             <Typography variant="h6" gutterBottom>Extracted Line Items (Editable)</Typography>
 
+            <Box sx={{ mb: 3 }}>
+              <FormControl fullWidth variant="standard">
+                <InputLabel>Payment Method (Applied to all items)</InputLabel>
+                <Select
+                  value={defaultPaymentMethodId}
+                  onChange={(e) => setDefaultPaymentMethodId(e.target.value === '' ? '' : Number(e.target.value))}
+                >
+                  {paymentMethods?.map((pm) => (
+                    <MenuItem key={pm.id} value={pm.id}>
+                      {pm.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+
             {/* Desktop Table View */}
             <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
               <Table>
@@ -411,7 +456,6 @@ export default function ScanPage() {
                     <TableCell>Description</TableCell>
                     <TableCell>Amount</TableCell>
                     <TableCell>Category</TableCell>
-                    <TableCell>Payment Method</TableCell>
                     <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -433,19 +477,7 @@ export default function ScanPage() {
                           </Select>
                         </FormControl>
                       </TableCell>
-                      <TableCell>
-                        <FormControl fullWidth>
-                          <Select
-                            value={item.paymentMethodId?.toString() || ''}
-                            onChange={(e: SelectChangeEvent) => handleLineItemChange(item.id, 'paymentMethodId', parseInt(e.target.value))}
-                            displayEmpty
-                            variant="standard"
-                          >
-                            <MenuItem value="" disabled>Select Method</MenuItem>
-                            {paymentMethods?.map((pm) => <MenuItem key={pm.id} value={pm.id!.toString()}>{pm.name}</MenuItem>)}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
+
                       <TableCell>
                         <IconButton onClick={() => handleRemoveLineItem(item.id)} aria-label="delete" color="error">
                           <DeleteIcon />
@@ -478,17 +510,7 @@ export default function ScanPage() {
                       {categories?.map((cat) => <MenuItem key={cat.id} value={cat.id!.toString()}>{cat.name}</MenuItem>)}
                     </Select>
                   </FormControl>
-                  <FormControl fullWidth size="small">
-                    <Select
-                      value={item.paymentMethodId?.toString() || ''}
-                      onChange={(e: SelectChangeEvent) => handleLineItemChange(item.id, 'paymentMethodId', parseInt(e.target.value))}
-                      displayEmpty
-                      variant="standard"
-                    >
-                      <MenuItem value="" disabled>Select Method</MenuItem>
-                      {paymentMethods?.map((pm) => <MenuItem key={pm.id} value={pm.id!.toString()}>{pm.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+
                 </Paper>
               ))}
             </Box>

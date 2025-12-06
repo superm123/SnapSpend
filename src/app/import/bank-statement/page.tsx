@@ -32,7 +32,7 @@ import { db, ICategory, IPaymentMethod, IExpense } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useStore } from '@/lib/store';
 import { format, parse, isValid } from 'date-fns';
-import { createWorker } from 'tesseract.js';
+
 
 
 
@@ -154,44 +154,6 @@ const BankStatementImportPage = () => {
         }
     }, [theme]);
 
-    const performOcrOnPdf = async (pdfDocument: any): Promise<string> => {
-        setLoadingMessage('Initializing OCR engine...');
-        const worker = await createWorker('eng', 1, {
-            logger: m => {
-                if (m.status === 'recognizing text') {
-                    setOcrProgress(m.progress);
-                }
-            }
-        });
-
-        let fullOcrText = '';
-
-        try {
-            for (let i = 1; i <= pdfDocument.numPages; i++) {
-                setLoadingMessage(`Processing Page ${i} of ${pdfDocument.numPages} with OCR...`);
-                setOcrProgress(0);
-
-                const page = await pdfDocument.getPage(i);
-                const viewport = page.getViewport({ scale: 2.0 });
-
-                const canvas = document.createElement('canvas');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                const context = canvas.getContext('2d');
-
-                if (context) {
-                    await page.render({ canvasContext: context, viewport }).promise;
-                    const { data: { text } } = await worker.recognize(canvas);
-                    fullOcrText += text + '\n\n';
-                }
-            }
-        } finally {
-            await worker.terminate();
-        }
-
-        return fullOcrText;
-    };
-
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files ? event.target.files[0] : null;
         if (!file) return;
@@ -222,11 +184,19 @@ const BankStatementImportPage = () => {
             // Try parsing standard text
             let parsed = parseBankStatement(cleanedText);
 
-            // If text layer extraction yielded no transactions (bad text layer or scanned), try OCR
+            // If text layer extraction yielded no transactions (bad text layer or scanned), try OCR w/ Scribe
             if (parsed.length === 0) {
-                console.log('Text layer yielded 0 transactions. Switching to OCR...');
-                setLoadingMessage('Standard extraction failed. initializing OCR...');
-                cleanedText = await performOcrOnPdf(pdfDocument);
+                console.log('Text layer yielded 0 transactions. Switching to Scribe OCR...');
+                setLoadingMessage('Standard extraction failed. Running Scribe OCR...');
+
+                // Load Scribe from public directory to bypass build issues
+                // @ts-ignore
+                const ScribeModule = await import(/* webpackIgnore: true */ '/scribe/scribe.js');
+                const Scribe = ScribeModule.default;
+                // Initialize Scribe (load language data, workers)
+                await Scribe.init();
+                cleanedText = await Scribe.extractText([file]);
+
                 parsed = parseBankStatement(cleanedText);
             }
 

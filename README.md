@@ -5,7 +5,7 @@ SnapSpend is a complete, production-ready, 100% offline-first expense tracker bu
 ## Features
 
 -   **100% Offline-First**: All data is stored locally using Dexie.js (IndexedDB). No internet connection required.
--   **Receipt Scanning**: Drag & drop or upload receipts for automatic line item extraction using Tesseract.js (Client-side OCR).
+-   **Receipt Scanning**: Drag & drop or upload receipts for automatic line item extraction using Scribe.js (Client-side OCR).
 -   **Manual Entry**: Quick and easy form for adding expenses manually.
 -   **Dashboard & Analytics**: Visualize your spending with pie charts (Category breakdown) and bar charts (Payment method breakdown).
 -   **Categories & Payment Methods**: Fully customizable categories and payment methods.
@@ -21,7 +21,7 @@ SnapSpend is a complete, production-ready, 100% offline-first expense tracker bu
 -   **Styling**: Tailwind CSS, Shadcn UI, Lucide Icons, Recharts
 -   **State Management**: Zustand
 -   **Database**: Dexie.js (IndexedDB)
--   **Utilities**: date-fns, uuid, Tesseract.js (OCR), react-pdf
+-   **Utilities**: date-fns, uuid, Scribe.js (OCR), react-pdf
 -   **Testing**: Jest (Unit), Playwright (E2E)
 
 ## Getting Started
