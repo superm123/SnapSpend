@@ -16,7 +16,9 @@ import {
   Typography,
   Container,
   Stack,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -36,12 +38,29 @@ export default function AddExpensePage() {
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [date, setDate] = useState<Date | null>(new Date());
 
+  // Snackbar State
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'warning' | 'info'>('success');
+
   useEffect(() => {
     if (currentUser) {
       setSelectedUser(currentUser.id!.toString());
     }
   }, [currentUser]);
 
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +73,7 @@ export default function AddExpensePage() {
       !selectedUser ||
       !date
     ) {
-      alert('Please fill all fields');
+      showSnackbar('Please fill all fields', 'warning');
       return;
     }
 
@@ -69,16 +88,20 @@ export default function AddExpensePage() {
 
     try {
       await db.expenses.add(newExpense);
-      alert('Expense added successfully!');
+      showSnackbar('Expense added successfully!', 'success');
+      // Clear form
       setDescription('');
       setAmount('');
       setSelectedCategory('');
       setSelectedPaymentMethod('');
       setDate(new Date());
-      router.push('/summary'); // Redirect to summary after adding
+      // Delay navigation slightly
+      setTimeout(() => {
+        router.push('/summary');
+      }, 1000);
     } catch (error) {
       console.error('Failed to add expense:', error);
-      alert('Failed to add expense.');
+      showSnackbar('Failed to add expense.', 'error');
     }
   };
 
@@ -182,6 +205,11 @@ export default function AddExpensePage() {
             </Button>
           </Stack>
         </Box>
+        <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+          <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Container>
     </LocalizationProvider>
   );

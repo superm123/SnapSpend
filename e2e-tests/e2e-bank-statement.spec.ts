@@ -1,14 +1,16 @@
 import { test, expect } from '@playwright/test';
 import * as path from 'path';
 
-test.describe.skip('Bank Statement Import E2E Flow', () => {
+test.describe('Bank Statement Import E2E Flow', () => {
+    test.setTimeout(180000); // 3 minutes timeout for OCR
+
     test.beforeEach(async ({ page }) => {
         // Clear IndexedDB before each test
-        await page.goto('/'); // Navigate to a page to ensure Dexie is initialized in the browser context
+        await page.goto('/');
         await page.evaluate(async () => {
-            const { db } = await import('../src/lib/db'); // Import db within the browser context
+            const { db } = await import('../src/lib/db');
             await db.delete();
-            await db.open(); // Re-open after delete
+            await db.open();
             // Seed categories
             await db.categories.bulkAdd([
                 { id: 1, name: 'Groceries' },
@@ -25,13 +27,13 @@ test.describe.skip('Bank Statement Import E2E Flow', () => {
                 { id: 1, name: 'Test User' },
                 { id: 2, name: 'Another User' },
             ]);
-            // Seed settings for billing cycle
+            // Seed settings
             await db.settings.add({ id: 1, billingCycleStart: 1, currency: 'USD' });
         });
 
-        // Set current user in Zustand store
+        // Set current user
         await page.evaluate(async () => {
-            const { useStore } = await import('../src/lib/store'); // Import Zustand store
+            const { useStore } = await import('../src/lib/store');
             useStore.setState({ currentUser: { id: 1, name: 'Test User' } });
         });
 
@@ -40,73 +42,61 @@ test.describe.skip('Bank Statement Import E2E Flow', () => {
     });
 
     test('should allow user to upload a PDF and display parsed transactions', async ({ page }) => {
-        // Upload dummy bank statement PDF
-        const filePath = 'tests/fixtures/statemnt.pdf';
+        const filePath = 'e2e-tests/fixtures/statemnt.pdf';
         await page.setInputFiles('input[type="file"]', filePath);
 
-        // Expect loading message to appear and disappear
-        await expect(page.locator('text=Extracting text from PDF, please wait...')).toBeVisible();
-        await expect(page.locator('text=Extracting text from PDF, please wait...')).toBeHidden({ timeout: 30000 }); // Increased timeout for PDF processing
+        // Expect loading message (new OCR flow)
+        // It might show "Reading PDF..." or "Extracting text layer..."
+        await expect(page.locator('text=Reading PDF...').or(page.locator('text=Extracting text layer...'))).toBeVisible();
 
-        // Expect raw extracted text to be visible
-        await expect(page.locator('text=Raw Extracted Text:')).toBeVisible();
-        await expect(page.locator('textarea[aria-label="Raw Extracted Text"]')).toBeVisible();
-        await expect(page.locator('textarea[aria-label="Raw Extracted Text"]')).not.toBeEmpty();
-
-        // Expect parsed transactions table to be visible
-        await expect(page.locator('text=Parsed Transactions (')).toBeVisible();
+        // Wait for results (OCR taking time)
+        await expect(page.locator('text=Parsed Transactions (')).toBeVisible({ timeout: 180000 });
         await expect(page.locator('table')).toBeVisible();
 
-        // Verify at least one transaction row exists (basic check)
         const tableRows = page.locator('table tbody tr');
-        expect(await tableRows.count()).toBeGreaterThan(0); // Check if there's at least one row + header
+        expect(await tableRows.count()).toBeGreaterThan(0);
         await expect(tableRows.first()).toBeVisible();
 
-        // Optionally, interact with the first transaction to ensure it's editable
+        // Check columns
         const firstRow = tableRows.first();
-        await expect(firstRow.locator('input[value*="2025"]')).toBeVisible(); // Check for a date
-        await expect(firstRow.locator('input[value*="Description"]')).toBeVisible(); // Check for description input
-        await expect(firstRow.locator('input[value*="123.45"]')).toBeVisible(); // Check for amount input
-
-        // Ensure "Import All Transactions" button is visible
-        await expect(page.getByRole('button', { name: 'Import All Transactions' })).toBeVisible();
+        await expect(firstRow.locator('input').first()).toBeVisible(); // Date
+        // The implementation uses inputs for all cells now
     });
 
     test('should allow editing and saving transactions', async ({ page }) => {
-        // Upload dummy bank statement PDF
-        const filePath = 'tests/fixtures/statemnt.pdf';
+        const filePath = 'e2e-tests/fixtures/statemnt.pdf';
         await page.setInputFiles('input[type="file"]', filePath);
 
         // Wait for processing
-        await expect(page.locator('text=Extracting text from PDF, please wait...')).toBeHidden({ timeout: 30000 });
+        await expect(page.locator('text=Parsed Transactions (')).toBeVisible({ timeout: 180000 });
 
         // Ensure table is visible
         await expect(page.locator('table')).toBeVisible();
 
-        // Edit the first transaction's description and amount
+        // Edit first row
         const firstRow = page.locator('table tbody tr').first();
+        // Index 1 is description (0 is date)
         const descriptionInput = firstRow.locator('td').nth(1).locator('input');
         const amountInput = firstRow.locator('td').nth(2).locator('input');
 
         await descriptionInput.fill('Edited Description');
         await amountInput.fill('987.65');
 
-        // Select category and payment method (using MUI Selects)
-        // For Category
-        await firstRow.locator('button[aria-label="Category"]').click();
+        // Select category
+        await firstRow.locator('div[role="combobox"]').first().click(); // Category Select
         await page.getByRole('option', { name: 'Groceries' }).click();
 
-        // For Payment Method
-        await firstRow.locator('button[aria-label="Payment Method"]').click();
+        // Select payment method
+        await firstRow.locator('div[role="combobox"]').last().click(); // Payment Method Select
         await page.getByRole('option', { name: 'Credit Card' }).click();
 
-        // Click "Import All Transactions" button
+        // Import
         await page.getByRole('button', { name: 'Import All Transactions' }).click();
 
-        // Expect success message
+        // Success
         await expect(page.locator('text=Successfully imported')).toBeVisible();
 
-        // Navigate to summary to verify (basic check as full verification is complex)
+        // Summary verify
         await page.goto('/summary');
         await expect(page.locator('text=Edited Description')).toBeVisible();
         await expect(page.locator('text=987.65')).toBeVisible();

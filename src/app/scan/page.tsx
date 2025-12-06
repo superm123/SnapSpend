@@ -29,6 +29,8 @@ import {
   InputLabel,
   LinearProgress,
   SelectChangeEvent,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
@@ -57,6 +59,11 @@ export default function ScanPage() {
   const [placeName, setPlaceName] = useState('');
   const [showRawOcr, setShowRawOcr] = useState(false);
   const [newItem, setNewItem] = useState<{ description: string; amount: string }>({ description: '', amount: '' });
+
+  // Snackbar State
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
 
   const categories = useLiveQuery(() => db.categories.toArray());
   const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray());
@@ -98,6 +105,19 @@ export default function ScanPage() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] } });
 
+  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
   const handleCameraScan = async () => {
     try {
       const photo = await Camera.getPhoto({
@@ -113,7 +133,7 @@ export default function ScanPage() {
       }
     } catch (error) {
       console.error('Camera failed:', error);
-      alert('Failed to open camera.');
+      showSnackbar('Failed to open camera.', 'error');
     }
   };
 
@@ -129,7 +149,7 @@ export default function ScanPage() {
       extractLineItems(text);
     } catch (error) {
       console.error('OCR failed:', error);
-      alert('OCR failed. Please try again.');
+      showSnackbar('OCR failed. Please try again.', 'error');
     } finally {
       setLoadingOcr(false);
     }
@@ -231,7 +251,7 @@ export default function ScanPage() {
   const handleAddNewItem = () => {
     const amountNum = parseFloat(newItem.amount);
     if (!newItem.description || isNaN(amountNum) || amountNum <= 0) {
-      alert('Please enter a valid description and amount for the new item.');
+      showSnackbar('Please enter a valid description and amount for the new item.', 'warning');
       return;
     }
 
@@ -248,7 +268,7 @@ export default function ScanPage() {
 
   const saveExpenses = async () => {
     if (lineItems.length === 0 || !currentUser?.id) {
-      alert(!currentUser?.id ? 'Please select a user in settings.' : 'No line items to save.');
+      showSnackbar(!currentUser?.id ? 'Please select a user in settings.' : 'No line items to save.', 'warning');
       return;
     }
 
@@ -265,15 +285,18 @@ export default function ScanPage() {
 
     try {
       await db.expenses.bulkAdd(newExpenses);
-      alert('Expenses saved successfully!');
-      setImage(null);
-      setBase64Image(null);
-      setLineItems([]);
-      setPlaceName('');
-      router.push('/summary');
+      showSnackbar('Expenses saved successfully!', 'success');
+      // Delay navigation slightly to let user see success message
+      setTimeout(() => {
+        setImage(null);
+        setBase64Image(null);
+        setLineItems([]);
+        setPlaceName('');
+        router.push('/summary');
+      }, 1000);
     } catch (error) {
       console.error('Failed to save expenses:', error);
-      alert('Failed to save expenses.');
+      showSnackbar('Failed to save expenses.', 'error');
     }
   };
 
@@ -508,6 +531,11 @@ export default function ScanPage() {
           </Paper>
         )}
       </Box>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }
