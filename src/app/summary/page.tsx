@@ -138,7 +138,7 @@ export default function SummaryPage() {
                       outerRadius={100}
                       label={({ name, percent }) => percent ? `${name} ${(percent * 100).toFixed(0)}%` : name}
                       onClick={(data) => {
-                        if (data && billingCycleDates) {
+                        if (data && data.name && billingCycleDates) {
                           const startDate = format(billingCycleDates.cycleStartDate, 'yyyy-MM-dd');
                           const endDate = format(billingCycleDates.cycleEndDate, 'yyyy-MM-dd');
                           router.push(`/history?category=${encodeURIComponent(data.name)}&startDate=${startDate}&endDate=${endDate}`);
@@ -174,7 +174,7 @@ export default function SummaryPage() {
                     <Bar
                       dataKey="value"
                       onClick={(data) => {
-                        if (data && billingCycleDates) {
+                        if (data && data.name && billingCycleDates) {
                           const startDate = format(billingCycleDates.cycleStartDate, 'yyyy-MM-dd');
                           const endDate = format(billingCycleDates.cycleEndDate, 'yyyy-MM-dd');
                           router.push(`/history?paymentMethod=${encodeURIComponent(data.name)}&startDate=${startDate}&endDate=${endDate}`);
