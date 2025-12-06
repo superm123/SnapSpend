@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, IExpense } from '@/lib/db';
 import { useStore } from '@/lib/store';
@@ -17,13 +18,35 @@ import {
   TableRow,
   TableContainer,
   Button,
+  Chip,
+  Stack,
 } from '@mui/material';
 import { subDays } from 'date-fns';
 
 export default function HistoryPage() {
+  const searchParams = useSearchParams();
   const { currentUser } = useStore();
   const [startDate, setStartDate] = useState(subDays(new Date(), 30));
   const [endDate, setEndDate] = useState(new Date());
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string | null>(null);
+
+  // Initialize from URL params
+  useEffect(() => {
+    const category = searchParams.get('category');
+    const paymentMethod = searchParams.get('paymentMethod');
+    const urlStartDate = searchParams.get('startDate');
+    const urlEndDate = searchParams.get('endDate');
+
+    if (category) setCategoryFilter(category);
+    if (paymentMethod) setPaymentMethodFilter(paymentMethod);
+    if (urlStartDate) setStartDate(new Date(urlStartDate));
+    if (urlEndDate) setEndDate(new Date(urlEndDate));
+  }, [searchParams]);
+
+
+  const categories = useLiveQuery(() => db.categories.toArray(), []);
+  const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray(), []);
 
   const expenses = useLiveQuery(() => {
     if (!currentUser?.id) return [];
@@ -34,12 +57,27 @@ export default function HistoryPage() {
     return db.expenses
       .where('userId')
       .equals(currentUser.id)
-      .and(item => item.date >= start && item.date <= end)
-      .toArray();
-  }, [currentUser, startDate, endDate]);
+      .and(item => {
+        const dateMatch = item.date >= start && item.date <= end;
+        if (!dateMatch) return false;
 
-  const categories = useLiveQuery(() => db.categories.toArray(), []);
-  const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray(), []);
+        // Apply category filter if set
+        if (categoryFilter && categories) {
+          const category = categories.find(c => c.name === categoryFilter);
+          if (category && item.categoryId !== category.id) return false;
+        }
+
+        // Apply payment method filter if set
+        if (paymentMethodFilter && paymentMethods) {
+          const paymentMethod = paymentMethods.find(pm => pm.name === paymentMethodFilter);
+          if (paymentMethod && item.paymentMethodId !== paymentMethod.id) return false;
+        }
+
+        return true;
+      })
+      .toArray();
+  }, [currentUser, startDate, endDate, categoryFilter, paymentMethodFilter, categories, paymentMethods]);
+
 
   const getCategoryName = (id: number) => categories?.find(c => c.id === id)?.name || 'N/A';
   const getPaymentMethodName = (id: number) => paymentMethods?.find(pm => pm.id === id)?.name || 'N/A';
@@ -76,6 +114,11 @@ export default function HistoryPage() {
     document.body.removeChild(link);
   };
 
+  const clearFilters = () => {
+    setCategoryFilter(null);
+    setPaymentMethodFilter(null);
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
@@ -108,6 +151,26 @@ export default function HistoryPage() {
               InputLabelProps={{ shrink: true }}
             />
           </Box>
+          {(categoryFilter || paymentMethodFilter) && (
+            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ alignSelf: 'center' }}>Active Filters:</Typography>
+              {categoryFilter && (
+                <Chip
+                  label={`Category: ${categoryFilter}`}
+                  onDelete={() => setCategoryFilter(null)}
+                  color="primary"
+                />
+              )}
+              {paymentMethodFilter && (
+                <Chip
+                  label={`Payment Method: ${paymentMethodFilter}`}
+                  onDelete={() => setPaymentMethodFilter(null)}
+                  color="primary"
+                />
+              )}
+              <Button size="small" onClick={clearFilters}>Clear All</Button>
+            </Stack>
+          )}
         </Paper>
 
         <TableContainer component={Paper}>

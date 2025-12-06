@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { getBillingCycleDates } from '@/lib/utils/customMonth';
@@ -43,6 +44,7 @@ const COLORS = [
 ];
 
 export default function SummaryPage() {
+  const router = useRouter();
   const { currentUser, currency } = useStore();
   const settings = useLiveQuery(() => db.settings.toArray());
 
@@ -123,53 +125,71 @@ export default function SummaryPage() {
         {categoryData && categoryData.length > 0 && (
           <Grid item xs={12} md={6}>
             <Card>
-                <CardHeader title="Category Breakdown" />
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        label={({ name, percent }) => percent ? `${name} ${(percent * 100).toFixed(0)}%` : name}
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              <CardHeader title="Category Breakdown" />
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label={({ name, percent }) => percent ? `${name} ${(percent * 100).toFixed(0)}%` : name}
+                      onClick={(data) => {
+                        if (data && billingCycleDates) {
+                          const startDate = format(billingCycleDates.cycleStartDate, 'yyyy-MM-dd');
+                          const endDate = format(billingCycleDates.cycleEndDate, 'yyyy-MM-dd');
+                          router.push(`/history?category=${encodeURIComponent(data.name)}&startDate=${startDate}&endDate=${endDate}`);
+                        }
+                      }}
+                      cursor="pointer"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </Grid>
         )}
 
         {paymentMethodData && paymentMethodData.length > 0 && (
           <Grid item xs={12} md={6}>
             <Card>
-                <CardHeader title="Payment Method Breakdown" />
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={paymentMethodData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis tickFormatter={(value) => `${currencySymbol}${value}`} />
-                      <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} />
-                      <Legend />
-                      <Bar dataKey="value">
-                        {paymentMethodData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              <CardHeader title="Payment Method Breakdown" />
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={paymentMethodData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis tickFormatter={(value) => `${currencySymbol}${value}`} />
+                    <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} />
+                    <Legend />
+                    <Bar
+                      dataKey="value"
+                      onClick={(data) => {
+                        if (data && billingCycleDates) {
+                          const startDate = format(billingCycleDates.cycleStartDate, 'yyyy-MM-dd');
+                          const endDate = format(billingCycleDates.cycleEndDate, 'yyyy-MM-dd');
+                          router.push(`/history?paymentMethod=${encodeURIComponent(data.name)}&startDate=${startDate}&endDate=${endDate}`);
+                        }
+                      }}
+                      cursor="pointer"
+                    >
+                      {paymentMethodData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </Grid>
         )}
       </Grid>

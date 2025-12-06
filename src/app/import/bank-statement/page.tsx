@@ -50,14 +50,18 @@ const parseBankStatement = (text: string): Transaction[] => {
     const transactions: Transaction[] = [];
     const lines = text.split('\n');
     let idCounter = 0;
-    const currentYear = new Date().getFullYear();
 
     const parseAmount = (str: string) => {
         const cleaned = str.replace(/[R\s,]/g, '');
         return parseFloat(cleaned);
     };
 
-
+    const isValidDate = (d: number, m: number, y?: number): boolean => {
+        if (m < 1 || m > 12) return false;
+        if (d < 1 || d > 31) return false;
+        if (y && (y < 2000 || y > 2100)) return false;
+        return true;
+    };
 
     // Filter keywords that indicate non-transaction lines
     const excludePatterns = [
@@ -71,43 +75,73 @@ const parseBankStatement = (text: string): Transaction[] => {
         const shouldExclude = excludePatterns.some(pattern => pattern.test(line));
         if (shouldExclude) continue;
 
-        const amountRegex = /[-+]?\s*R?\s*\d{1,3}(?:[\s,]\d{3})*\.\d{2}/g;
-        const amountMatches = [...line.matchAll(amountRegex)];
-
-        if (amountMatches.length === 0) continue;
-
-        const amountMatch = amountMatches[0];
-        const amountStr = amountMatch[0];
-
-        // Extended date regex to capture "10 01" style dates too
-        const dateRegex = /(\d{1,2}[./\-\s]\d{1,2}[./\-\s]\d{2,4})|(\d{1,2}[./\-\s]\d{1,2})|(\d{1,2}\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s?\d{0,4})/i;
+        // 1. Try to extract DATE first to avoid amount regex merging date numbers
+        const dateRegex = /((?:19|20)\d{2}[./\-\s]\d{1,2}[./\-\s]\d{1,2})|(\d{1,2}[./\-\s]\d{1,2}[./\-\s](?:19|20)\d{2})|(\d{1,2}[./\-\s]\d{1,2})|(\d{1,2}\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s?\d{0,4})/i;
         const dateMatch = line.match(dateRegex);
 
         let dateStr = '';
+        let lineRecursive = line; // Copy for amount extraction
+
         if (dateMatch) {
-            dateStr = dateMatch[0];
-        } else {
-            // Fallback to today's date if valid amount found but no date
+            const rawDate = dateMatch[0];
+            const parts = rawDate.split(/[./\-\s]/).filter(p => p);
+            let valid = false;
+
+            if (parts.length >= 3) {
+                const n1 = parseInt(parts[0]);
+                const n2 = parseInt(parts[1]);
+                const n3 = parseInt(parts[2]);
+
+                // Case 1: Year at start (YYYY/MM/DD)
+                if (n1 >= 1900 && n1 <= 2100) {
+                    if (isValidDate(n3, n2, n1)) valid = true; // d, m, y
+                }
+                // Case 2: Year at end (DD/MM/YYYY)
+                else if (n3 >= 1900 && n3 <= 2100) {
+                    if ((isValidDate(n1, n2, n3) || isValidDate(n2, n1, n3))) valid = true;
+                }
+            } else if (parts.length === 2) {
+                const n1 = parseInt(parts[0]);
+                const n2 = parseInt(parts[1]);
+                if (!isNaN(n1) && !isNaN(n2)) {
+                    if ((isValidDate(n1, n2) || isValidDate(n2, n1))) valid = true;
+                } else {
+                    valid = true; // Text month
+                }
+            } else {
+                valid = true; // Text month with no year
+            }
+
+            if (valid) {
+                dateStr = rawDate;
+                lineRecursive = line.replace(rawDate, '');
+            }
+        }
+
+        if (!dateStr) {
+            // Default to today's date if valid amount found but no valid date
             dateStr = format(new Date(), 'dd/MM/yyyy');
         }
 
-        const amount = parseAmount(amountStr);
-        let residual = line.replace(amountStr, '');
-        if (dateMatch) {
-            residual = residual.replace(dateMatch[0], '');
-        }
+        // 2. Extract AMOUNT from the RESIDUAL line
+        const amountRegex = /[-+]?\s*R?\s*\d{1,3}(?:[\s,]\d{3})*\.\d{2}/g;
+        const amountMatches = [...lineRecursive.matchAll(amountRegex)];
 
+        if (amountMatches.length === 0) continue;
+
+        const amountStr = amountMatches[0][0];
+        const amount = parseAmount(amountStr);
+
+        let residual = lineRecursive.replace(amountStr, '');
         let description = residual.replace(/[^\w\s\-\/]/g, '').replace(/\s+/g, ' ').trim();
 
-        if (description.length < 2) {
-            continue;
-        }
+        if (description.length < 2) continue;
 
         const type = amount < 0 ? 'debit' : 'credit';
 
         transactions.push({
             id: `temp-${idCounter++}`,
-            date: dateStr, // Keep original extracted date string for smarter parsing later
+            date: dateStr,
             description: description,
             amount: Math.abs(amount),
             type: type,
@@ -128,7 +162,10 @@ const BankStatementImportPage = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'warning'>('success');
     const [highlightedTransactionId, setHighlightedTransactionId] = useState<string | null>(null);
+
     const [ocrProgress, setOcrProgress] = useState(0);
+    const [bulkPaymentMethodId, setBulkPaymentMethodId] = useState<number | ''>('');
+    const [showRawText, setShowRawText] = useState(false);
 
     const categories = useLiveQuery(() => db.categories.toArray(), []) as ICategory[] | undefined;
     const paymentMethods = useLiveQuery(() => db.paymentMethods.toArray(), []) as IPaymentMethod[] | undefined;
@@ -441,18 +478,51 @@ const BankStatementImportPage = () => {
 
                 {pdfText && (
                     <Paper sx={{ p: 2, mb: 4 }}>
-                        <Typography variant="h6" gutterBottom>Raw Extracted Text:</Typography>
-                        <TextField
-                            value={pdfText}
-                            multiline
-                            rows={10}
-                            fullWidth
-                            variant="outlined"
-                            InputProps={{ readOnly: true }}
-                            sx={{ mb: 2 }}
-                        />
+                        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h6">Parsed Transactions ({parsedTransactions.length})</Typography>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => setShowRawText(!showRawText)}
+                            >
+                                {showRawText ? 'Hide' : 'Show'} Raw Text
+                            </Button>
+                        </Box>
 
-                        <Typography variant="h6" gutterBottom>Parsed Transactions ({parsedTransactions.length}):</Typography>
+                        {showRawText && (
+                            <TextField
+                                value={pdfText}
+                                multiline
+                                rows={10}
+                                fullWidth
+                                variant="outlined"
+                                InputProps={{ readOnly: true }}
+                                sx={{ mb: 2 }}
+                            />
+                        )}
+
+                        <Box sx={{ mb: 3 }}>
+                            <FormControl fullWidth variant="standard">
+                                <InputLabel>Default Payment Method (Applied to all items)</InputLabel>
+                                <Select
+                                    value={bulkPaymentMethodId}
+                                    onChange={(e) => {
+                                        const newVal = e.target.value === '' ? '' : Number(e.target.value);
+                                        setBulkPaymentMethodId(newVal);
+                                        if (newVal !== '') {
+                                            setParsedTransactions(prev => prev.map(t => ({ ...t, paymentMethodId: newVal })));
+                                        }
+                                    }}
+                                >
+                                    {paymentMethods?.map((pm) => (
+                                        <MenuItem key={pm.id} value={pm.id}>
+                                            {pm.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
                         {parsedTransactions.length > 0 ? (
                             <TableContainer component={Paper}>
                                 <Table sx={{ minWidth: 650 }} aria-label="parsed transactions table">
@@ -461,9 +531,7 @@ const BankStatementImportPage = () => {
                                             <TableCell>Date</TableCell>
                                             <TableCell>Description</TableCell>
                                             <TableCell align="right">Amount</TableCell>
-                                            <TableCell>Type</TableCell>
                                             <TableCell>Category</TableCell>
-                                            <TableCell>Payment Method</TableCell>
                                             <TableCell>Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -500,14 +568,12 @@ const BankStatementImportPage = () => {
                                                         onChange={(e) => handleTransactionChange(transaction.id, 'amount', parseFloat(e.target.value))}
                                                         fullWidth
                                                         variant="standard"
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <TextField
-                                                        value={transaction.type}
-                                                        onChange={(e) => handleTransactionChange(transaction.id, 'type', e.target.value as 'debit' | 'credit')}
-                                                        fullWidth
-                                                        variant="standard"
+                                                        sx={{
+                                                            '& input': {
+                                                                color: transaction.type === 'debit' ? 'error.main' : 'success.main',
+                                                                fontWeight: 'bold'
+                                                            }
+                                                        }}
                                                     />
                                                 </TableCell>
                                                 <TableCell>
@@ -524,25 +590,6 @@ const BankStatementImportPage = () => {
                                                             {categories?.map((category) => (
                                                                 <MenuItem key={category.id} value={category.id!.toString()}>
                                                                     {category.name}
-                                                                </MenuItem>
-                                                            ))}
-                                                        </Select>
-                                                    </FormControl>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <FormControl fullWidth variant="standard">
-                                                        <InputLabel>Payment Method</InputLabel>
-                                                        <Select
-                                                            value={transaction.paymentMethodId?.toString() || (defaultPaymentMethodId ? defaultPaymentMethodId.toString() : '')}
-                                                            onChange={(e: SelectChangeEvent) => handleTransactionChange(transaction.id, 'paymentMethodId', parseInt(e.target.value))}
-                                                            label="Payment Method"
-                                                        >
-                                                            <MenuItem value="">
-                                                                <em>None</em>
-                                                            </MenuItem>
-                                                            {paymentMethods?.map((pm) => (
-                                                                <MenuItem key={pm.id} value={pm.id!.toString()}>
-                                                                    {pm.name}
                                                                 </MenuItem>
                                                             ))}
                                                         </Select>
